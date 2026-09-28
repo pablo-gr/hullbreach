@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 0.2
+**Versión:** 0.3
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -509,7 +509,86 @@ Utilizar un sensor activo no debe equivaler automáticamente a revelar una posic
 
 ---
 
-# 12. Entorno y detección
+# 12. Jammer e interferencia de sensores
+
+El Jammer es una contramedida electrónica destinada a degradar la precisión de los sensores enemigos.
+
+## 12.1. Funcionamiento general
+
+Cuando se activa, el Jammer emite interferencias en todas direcciones.
+
+Su efecto principal no es impedir que la nave sea detectada. Hace exactamente lo contrario: incrementa de forma extrema la huella energética de la nave.
+
+Una nave utilizando un Jammer debe resultar extraordinariamente fácil de detectar mediante sensores energéticos y, en condiciones normales, incluso los sensores pasivos deben poder ubicarla con mucha más facilidad de lo habitual.
+
+La contrapartida es que la interferencia degrada enormemente la precisión de las mediciones enemigas.
+
+Por tanto, el Jammer crea una situación deliberadamente paradójica:
+
+> El enemigo sabe que estás ahí, pero le resulta mucho más difícil saber exactamente dónde estás.
+
+## 12.2. Efecto sobre los ecos
+
+El Jammer no debe convertir la detección en una tirada aleatoria ni ocultar artificialmente la existencia de la nave.
+
+Cuando un sensor consigue detectar una nave bajo interferencia, sigue generando un eco, pero el radio máximo de error de la medición aumenta considerablemente.
+
+Conceptualmente:
+
+- detección: puede seguir siendo muy fácil;
+- identificación de presencia: muy fácil;
+- precisión de posición: muy degradada;
+- construcción de una solución de tiro: mucho más difícil.
+
+Esto encaja con la separación fundamental entre capacidad de detección y precisión de medición.
+
+## 12.3. Coste táctico
+
+Activar un Jammer implica aceptar voluntariamente una huella energética enorme.
+
+En términos de doctrina:
+
+- no sirve para permanecer oculto;
+- sirve para sobrevivir cuando el enemigo ya puede buscarte o cuando se espera un ataque;
+- puede permitir romper o degradar soluciones de tiro;
+- puede facilitar la supervivencia frente a misiles que dependan de una posición inicial precisa;
+- puede delatar la nave a enemigos que antes no sabían dónde estaba.
+
+Debe considerarse una herramienta de emergencia o de guerra electrónica activa, no una forma de stealth.
+
+## 12.4. Relación con sensores pasivos
+
+El Jammer es una de las excepciones importantes a la baja eficacia general de los sensores pasivos.
+
+Su emisión es tan intensa que puede permitir a receptores pasivos obtener una localización mucho mejor que la que normalmente conseguirían frente a una nave discreta.
+
+Esto no significa necesariamente una posición exacta: el propio Jammer está diseñado para contaminar las mediciones.
+
+La relación concreta entre intensidad del Jammer, sensores pasivos, triangulación y precisión se definirá en el apartado detallado de contramedidas electrónicas.
+
+## 12.5. Diseño pendiente
+
+Más adelante deberán definirse:
+
+- tipos de Jammer;
+- potencia e intensidad;
+- consumo energético;
+- huella energética generada;
+- efecto exacto sobre precisión de sensores de firma;
+- efecto exacto sobre precisión de sensores energéticos;
+- efecto sobre seekers de misiles;
+- interacción con sensores pasivos;
+- posibilidad de localizar la fuente mediante triangulación;
+- modos de funcionamiento;
+- arcos o carácter omnidireccional definitivo;
+- contramedidas contra el Jammer;
+- interacción con varias fuentes de interferencia.
+
+Por ahora queda fijado únicamente su principio de funcionamiento: enorme exposición energética a cambio de una fuerte degradación de la precisión enemiga.
+
+---
+
+# 13. Entorno y detección
 
 El entorno es una parte estratégica del combate. Las rutas de aproximación y las posiciones relativas respecto a cuerpos celestes y fenómenos ambientales deben importar.
 
@@ -588,7 +667,7 @@ Ningún entorno debe proporcionar stealth universal: una posición excelente fre
 
 ---
 
-# 13. Ataque con misiles
+# 14. Ataque con misiles
 
 ## 13.1. Flujo básico
 
@@ -637,7 +716,7 @@ El ordenador puede ofrecer ayudas, pero no debe eliminar la posibilidad de que u
 
 ---
 
-# 14. Defensa contra misiles
+# 15. Defensa contra misiles
 
 La defensa utiliza el mismo lenguaje visual que el ataque:
 
@@ -667,7 +746,7 @@ No existe una defensa capaz de detener indefinidamente todos los ataques.
 
 ---
 
-# 15. Maniobra
+# 16. Maniobra
 
 La maniobra no está pensada principalmente para esquivar físicamente un misil mediante reflejos.
 
@@ -687,7 +766,7 @@ El combate tridimensional debe importar porque los sensores activos son muy dire
 
 ---
 
-# 16. Armas y defensas como problemas distintos
+# 17. Armas y defensas como problemas distintos
 
 Las armas no deben diferenciarse principalmente por daño.
 
@@ -706,7 +785,7 @@ Ningún misil, defensa o arma debe ser perfecto.
 
 ---
 
-# 17. Daño
+# 18. Daño
 
 Un impacto se resuelve físicamente sobre la nave:
 
@@ -731,7 +810,7 @@ Un impacto antinave directo suele ser catastrófico.
 
 ---
 
-# 18. Recursos y campaña
+# 19. Recursos y campaña
 
 El juego tendrá consumo básico de recursos.
 
@@ -747,7 +826,7 @@ Su función es introducir autonomía, planificación y logística sin convertir 
 
 ---
 
-# 19. Puertos, estaciones y puntos habitados
+# 20. Puertos, estaciones y puntos habitados
 
 Los nodos habitados pueden ofrecer, según el lugar:
 
@@ -765,7 +844,7 @@ No todos los lugares deben ofrecer todos los servicios.
 
 ---
 
-# 20. Exploración
+# 21. Exploración
 
 La exploración será básica y estará centrada en obtener información, no en recorrer manualmente superficies planetarias.
 
@@ -785,7 +864,7 @@ Los sensores instalados condicionarán qué información puede obtenerse.
 
 ---
 
-# 21. Misiones e historia
+# 22. Misiones e historia
 
 Existirá una historia principal y misiones secundarias.
 
@@ -808,7 +887,7 @@ Las misiones pueden evolucionar al descubrir nueva información.
 
 ---
 
-# 22. Oficiales y tripulación
+# 23. Oficiales y tripulación
 
 Los oficiales son personajes reclutables con habilidades que afectan al juego.
 
@@ -828,7 +907,7 @@ La tripulación genérica no se gestiona como individuos y tiene un nivel genera
 
 ---
 
-# 23. Interfaz táctica
+# 24. Interfaz táctica
 
 ## 23.1. Vista principal
 
@@ -877,7 +956,7 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 
 ---
 
-# 24. Reglas globales ya fijadas
+# 25. Reglas globales ya fijadas
 
 1. Combate visual en tercera persona.
 2. Ritmo lento y deliberado.
@@ -913,10 +992,11 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 32. Ningún sistema, arma, misil, defensa o nave debe ser perfecto.
 33. Las naves muy grandes son doctrinalmente vulnerables por su enorme detectabilidad.
 34. Las grandes unidades necesitan escolta y no constituyen una progresión automática hacia 'mejor nave'.
+35. El Jammer aumenta de forma extrema la huella energética pero degrada fuertemente la precisión de los sensores enemigos.
 
 ---
 
-# 25. Elementos pendientes de diseño
+# 26. Elementos pendientes de diseño
 
 Quedan por concretar, entre otros:
 
@@ -935,6 +1015,7 @@ Quedan por concretar, entre otros:
 - tiempos de viaje y cinemática de misiles;
 - seekers concretos;
 - guerra electrónica;
+- diseño detallado de Jammers e interferencia;
 - enlaces de datos;
 - drones;
 - defensas concretas;
@@ -949,7 +1030,7 @@ Quedan por concretar, entre otros:
 
 ---
 
-# 26. Criterio de diseño para futuras decisiones
+# 27. Criterio de diseño para futuras decisiones
 
 Al añadir cualquier sistema o componente deben responderse al menos estas preguntas:
 

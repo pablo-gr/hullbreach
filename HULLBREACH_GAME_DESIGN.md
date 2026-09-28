@@ -603,7 +603,7 @@ Se distinguen dos mecanismos:
 - ocultación: un objeto se encuentra físicamente entre sensor y objetivo;
 - enmascaramiento: el objetivo se encuentra delante de un fondo que dificulta distinguirlo.
 
-## 12.1. Cuerpos celestes y firma
+## 13.1. Cuerpos celestes y firma
 
 Si una nave se encuentra delante de un cuerpo celeste desde el punto de vista del sensor, la detección por firma empeora.
 
@@ -613,13 +613,13 @@ Si la nave se encuentra al otro lado del cuerpo celeste, la detección de firma 
 
 Un planeta, luna o asteroide grande puede por tanto proporcionar cobertura real contra sensores de firma.
 
-## 12.2. Cuerpos celestes y energía
+## 13.2. Cuerpos celestes y energía
 
 Si una nave se encuentra detrás de un cuerpo celeste, la detección energética también se reduce.
 
 El bloqueo energético no tiene por qué ser idéntico al bloqueo de firma y queda sujeto al tipo concreto de sensor.
 
-## 12.3. Polvo y nebulosas
+## 13.3. Polvo y nebulosas
 
 El polvo degrada todos los métodos de detección.
 
@@ -631,7 +631,7 @@ Pueden existir nubes de polvo localizadas fuera de nebulosas.
 
 El polvo puede afectar tanto a capacidad de detección como a precisión.
 
-## 12.4. Estrellas y huella energética
+## 13.4. Estrellas y huella energética
 
 Las estrellas enmascaran fuertemente la huella energética.
 
@@ -639,7 +639,7 @@ Este efecto existe tanto si la nave está delante de la estrella como si está d
 
 La enorme fuente energética de fondo dificulta separar la emisión de la nave.
 
-## 12.5. Detección y precisión ambiental independientes
+## 13.5. Detección y precisión ambiental independientes
 
 El entorno puede afectar por separado a:
 
@@ -650,7 +650,7 @@ El entorno puede afectar por separado a:
 
 Por tanto puede existir una situación en la que un objetivo sea detectable de forma fiable pero su posición medida sea muy imprecisa.
 
-## 12.6. Consecuencia estratégica
+## 13.6. Consecuencia estratégica
 
 El espacio abierto es generalmente el entorno más desfavorable para una nave que quiera permanecer oculta.
 
@@ -669,7 +669,7 @@ Ningún entorno debe proporcionar stealth universal: una posición excelente fre
 
 # 14. Ataque con misiles
 
-## 13.1. Flujo básico
+## 14.1. Flujo básico
 
 1. El jugador selecciona un eco o una zona de interés.
 2. La cámara puede orientarse hacia esa dirección.
@@ -684,7 +684,7 @@ Ningún entorno debe proporcionar stealth universal: una posición excelente fre
 
 El misil no conoce mágicamente la posición real del enemigo.
 
-## 13.2. Seeker amplio
+## 14.2. Seeker amplio
 
 Un seeker amplio:
 
@@ -694,7 +694,7 @@ Un seeker amplio:
 - proporciona más tiempo para reaccionar;
 - es más vulnerable a contramedidas que dependen de tiempo.
 
-## 13.3. Seeker estrecho
+## 14.3. Seeker estrecho
 
 Un seeker estrecho:
 
@@ -708,7 +708,7 @@ Principio:
 
 > Mayor tolerancia al error implica mayor exposición. Menor tolerancia al error permite mayor sorpresa.
 
-## 13.4. Habilidad del jugador
+## 14.4. Habilidad del jugador
 
 El jugador puede disparar tras uno o dos ecos usando un seeker amplio o esperar varios barridos para estimar mejor el centro de la nube y utilizar un seeker más estrecho.
 
@@ -909,7 +909,7 @@ La tripulación genérica no se gestiona como individuos y tiene un nivel genera
 
 # 24. Interfaz táctica
 
-## 23.1. Vista principal
+## 24.1. Vista principal
 
 Cámara 3D en tercera persona alrededor de la nave.
 
@@ -921,7 +921,7 @@ La escena 3D es parte del sistema de control y permite:
 - observar misiles, drones y naves;
 - comprender la geometría del enfrentamiento.
 
-## 23.2. Interfaz de detección
+## 24.2. Interfaz de detección
 
 El jugador debe poder:
 
@@ -935,7 +935,7 @@ El jugador debe poder:
 
 No debe mostrarse una posición real oculta ni una correlación automática inexistente.
 
-## 23.3. Interfaz de disparo
+## 24.3. Interfaz de disparo
 
 Flujo objetivo:
 
@@ -946,7 +946,7 @@ Flujo objetivo:
 5. hacer clic sobre el punto de espacio deseado;
 6. disparar.
 
-## 23.4. Interfaz defensiva
+## 24.4. Interfaz defensiva
 
 Cuando una amenaza alcanza la calidad de detección necesaria para una defensa compatible, aparece un indicador claro.
 

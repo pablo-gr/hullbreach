@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 0.4
+**Versión:** 0.5
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -556,35 +556,124 @@ Un mismo barrido devuelve todos los objetos del volumen explorado que superen in
 
 # 11. Sensores pasivos
 
-## 11.1. Cobertura
+Existen al menos dos familias de sensores pasivos con funciones muy diferentes:
 
-Los sensores pasivos son eficaces en prácticamente todas las direcciones excepto hacia atrás, donde existe una zona muy degradada o ciega.
+- sensores defensivos;
+- sensores pasivos direccionales.
 
-## 11.2. Alcance limitado
+Ambos trabajan sobre emisiones energéticas y no necesitan emitir activamente para detectar un objetivo.
 
-Los sensores pasivos son deliberadamente poco eficaces.
+## 11.1. Sensores defensivos
 
-Deben permitir que una nave enemiga bien manejada se aproxime sin ser detectada, de forma análoga al combate submarino.
+Los sensores defensivos son el tipo de sensor pasivo más común.
 
-Su función no es crear una burbuja perfecta de conocimiento alrededor de la nave.
+Su función principal es detectar misiles que se aproximan y marcarlos para los sistemas de contramedidas.
 
-## 11.3. Misiles
+La mayoría de contramedidas necesitan que la nave disponga de sensores defensivos capaces de detectar y marcar la amenaza antes de poder actuar contra ella.
 
-Los pasivos pueden detectar misiles entrantes, pero normalmente cuando ya están relativamente cerca.
+### 11.1.1. Características
 
-El momento de detección determina qué capas defensivas siguen disponibles.
+Los sensores defensivos tienen solamente dos características principales:
 
-## 11.4. Pulsos de sensores activos
+- **Sensibilidad:** capacidad para detectar amenazas energéticas próximas.
+- **Huella energética:** energía consumida y emitida mientras el sensor permanece activo.
 
-Los pasivos pueden advertir de que un sensor activo está buscando en la zona donde se encuentra la propia nave.
+No tienen una estadística de precisión equivalente a la de los sensores de búsqueda. Su función es proporcionar la detección necesaria para que los sistemas defensivos puedan actuar.
 
-Esta detección no proporciona necesariamente la posición de la nave emisora.
+### 11.1.2. Cobertura
 
-En condiciones normales puede limitarse a indicar que existe actividad de sensor activo y quizá una dirección aproximada.
+Son conceptualmente omnidireccionales, pero sufren interferencias muy fuertes producidas por los propios sistemas de la nave.
 
-Triangular la posición del emisor debe ser difícil.
+- Si los motores están funcionando, la interferencia impide detectar correctamente amenazas que lleguen desde detrás.
+- Si los sensores activos están funcionando, su emisión interfiere con el sensor defensivo e impide detectar correctamente amenazas que lleguen desde delante.
 
-Utilizar un sensor activo no debe equivaler automáticamente a revelar una posición precisa al enemigo.
+Por tanto, su cobertura real depende del estado operativo de la propia nave.
+
+### 11.1.3. Alcance
+
+Su alcance es reducido.
+
+Están pensados principalmente para detectar misiles cuando ya se encuentran relativamente cerca. La sensibilidad del sensor determina cuánto margen de reacción obtiene la nave antes del impacto.
+
+Una nave con mejores sensores defensivos puede marcar una amenaza antes y mantener disponibles más capas de contramedidas.
+
+### 11.1.4. Detección de sensores activos enemigos
+
+Los sensores defensivos también pueden detectar que un barrido de sensor activo enemigo ha alcanzado o está buscando la zona donde se encuentra la nave.
+
+Esta detección no localiza la nave emisora.
+
+El resultado normal es únicamente saber que existe actividad de sensor activo enemiga en la zona. No proporciona un eco posicional equivalente al de un sensor de búsqueda.
+
+## 11.2. Sensores pasivos direccionales
+
+Los sensores pasivos direccionales son menos frecuentes y solo están disponibles en determinadas naves o configuraciones.
+
+Su función es localizar objetivos a partir de su huella energética sin emitir un barrido activo.
+
+Su principal ventaja es la discreción:
+
+- no revelan la presencia de la nave mediante una emisión de búsqueda;
+- su huella energética suele ser mucho menor que la de un sensor activo equivalente.
+
+A cambio tienen limitaciones severas.
+
+### 11.2.1. Direccionalidad
+
+Son direccionales y están orientados hacia el morro de la nave.
+
+Son mucho más sensibles a la orientación que los sensores activos: la nave debe estar casi perfectamente orientada hacia el objetivo para conseguir una detección útil.
+
+Pequeñas desviaciones angulares pueden reducir fuertemente su sensibilidad efectiva o impedir la detección.
+
+### 11.2.2. Interferencia de la propia nave
+
+Estos sensores se ven fuertemente interferidos tanto por la firma física como por la huella energética de la propia nave.
+
+Consecuencias:
+
+- las naves con firma media o grande no pueden utilizarlos de forma efectiva;
+- incluso una nave de firma pequeña necesita reducir drásticamente su actividad;
+- para utilizarlos correctamente puede ser necesario apagar casi todos los sistemas de la nave;
+- motores, sensores activos, armas, defensas y otros sistemas energéticos pueden degradar o impedir su funcionamiento.
+
+Esto los convierte en sensores adecuados principalmente para naves pequeñas, discretas y configuradas específicamente para operar en silencio.
+
+### 11.2.3. Alcance y sensibilidad
+
+Tienen muy poco alcance.
+
+Solo están pensados para detectar objetivos dentro de la banda corta y, aun en esa banda, su sensibilidad no es especialmente alta.
+
+No sustituyen a los sensores activos como sistema general de búsqueda.
+
+Su utilidad consiste en permitir búsquedas discretas a corta distancia cuando la nave puede aceptar las fuertes restricciones operativas necesarias para utilizarlos.
+
+### 11.2.4. Características
+
+Al igual que un sensor activo energético, un sensor pasivo direccional tiene:
+
+- **Sensibilidad**;
+- **Precisión**;
+- **Huella energética**.
+
+La sensibilidad y la huella energética suelen ser bajas.
+
+La precisión determina la calidad de la posición estimada cuando consigue detectar un objetivo y participa también en el proceso de identificación según las reglas generales de los sensores.
+
+### 11.2.5. Relación con identificación
+
+Como detectan huella energética, los sensores pasivos direccionales siguen la lógica de identificación de los sensores energéticos y, por tanto, sufren la penalización base correspondiente frente a los sensores de firma.
+
+## 11.3. Principio doctrinal
+
+Los sensores pasivos no forman una burbuja perfecta de conocimiento.
+
+Los defensivos proporcionan alerta y soporte a las contramedidas a corta distancia.
+
+Los pasivos direccionales permiten búsquedas discretas, pero exigen una nave apropiada, orientación casi perfecta, poca firma, muy baja actividad energética y proximidad al objetivo.
+
+Esto preserva la posibilidad de que una nave se aproxime sin ser detectada y mantiene el paradigma de combate similar al de submarinos.
 
 ---
 
@@ -1079,6 +1168,10 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 39. La identificación progresa desde objeto hasta modelo/clase exacta y no se degrada una vez alcanzada.
 40. Los sensores energéticos tienen una penalización base a la identificación respecto a los sensores de firma.
 41. La huella energética de un dispositivo existe mientras permanezca activo, salvo excepciones específicas definidas por el propio componente.
+42. Los sensores defensivos son pasivos, energéticos y omnidireccionales en principio, pero los motores ciegan su sector trasero y los sensores activos ciegan su sector delantero.
+43. La mayoría de contramedidas necesitan sensores defensivos para detectar y marcar misiles entrantes.
+44. Los sensores pasivos direccionales permiten localizar huellas energéticas sin emitir, pero solo a corta distancia, con orientación casi perfecta y bajo condiciones de muy baja firma y huella propia.
+45. Los sensores pasivos direccionales tienen Sensibilidad, Precisión y Huella energética y siguen la penalización de identificación de los sensores energéticos.
 
 ---
 
@@ -1091,7 +1184,8 @@ Quedan por concretar, entre otros:
 - fórmula definitiva de precisión;
 - distribución estadística del error de eco;
 - perfiles angulares exactos de sensores;
-- tipos concretos de sensores pasivos;
+- modelos concretos de sensores defensivos y pasivos direccionales;
+- reglas exactas de interferencia propia sobre sensores pasivos;
 - retardos exactos de propagación por banda de distancia;
 - progresión exacta de identificación por eco;
 - penalización exacta de identificación de sensores energéticos;

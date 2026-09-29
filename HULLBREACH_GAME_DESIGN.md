@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 0.6
+**Versión:** 0.7
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -1010,33 +1010,215 @@ El ordenador puede ofrecer ayudas, pero no debe eliminar la posibilidad de que u
 
 ---
 
-# 15. Defensa contra misiles
+# 15. Defensa contra misiles y contramedidas
 
-La defensa utiliza el mismo lenguaje visual que el ataque:
+La defensa en Hullbreach se basa en evitar que una amenaza alcance el casco.
 
-> mirar, detectar, seleccionar, actuar.
-
-Un misil puede ser visualmente perceptible antes de que los sensores hayan obtenido una solución suficiente para utilizar una defensa.
-
-El jugador puede colocar el cursor sobre la amenaza y esperar a que aparezca el indicador de detección/adquisición.
-
-Las defensas previstas incluyen:
+Las contramedidas principales previstas son:
 
 - misiles interceptores;
-- guerra electrónica;
+- láser defensivo;
+- defensa cinética;
 - señuelos;
-- láseres defensivos;
-- defensa puntual.
+- Jammer;
+- maniobra y control de emisiones como defensa indirecta.
 
-Cada sistema defensivo tendrá:
+No existe una defensa perfecta ni una capa capaz de detener indefinidamente todos los ataques.
 
-- requisitos de detección;
-- una ventana temporal;
-- posibles arcos de cobertura;
-- limitaciones de munición, energía o capacidad;
-- fortalezas frente a determinados tipos de amenaza.
+## 15.1. Principio de defensa por capas
 
-No existe una defensa capaz de detener indefinidamente todos los ataques.
+La defensa puede entenderse como una secuencia de capas:
+
+1. evitar o degradar la solución de tiro enemiga;
+2. engañar o desviar el ataque;
+3. destruir amenazas a larga distancia con interceptores;
+4. destruir amenazas supervivientes con defensas de última hora;
+5. si todo falla, el impacto alcanza el casco.
+
+Cada capa resuelve un problema distinto.
+
+La fortaleza de una nave defensiva no consiste en absorber impactos, sino en reducir la probabilidad de que alguno llegue a producirse.
+
+## 15.2. Misiles interceptores
+
+Los misiles interceptores son la mejor defensa directa contra misiles enemigos.
+
+Son más pequeños que los misiles ofensivos, pero aun así ocupan mucho espacio comparados con la munición de otras contramedidas.
+
+Sus principales ventajas son:
+
+- gran eficacia;
+- capacidad para destruir amenazas cuando aún están lejos;
+- posibilidad de proteger tanto a la propia nave como a otras naves cercanas, según la configuración futura.
+
+Sus principales limitaciones son:
+
+- necesitan que el misil enemigo haya sido detectado con suficiente antelación;
+- requieren sensores defensivos capaces de marcar la amenaza;
+- la munición es limitada;
+- cada interceptor ocupa un volumen relevante de almacenamiento;
+- una nave puede quedarse sin capacidad defensiva después de gastar sus interceptores.
+
+Por ello son especialmente apropiados para escoltas defensivas especializadas.
+
+La principal debilidad de esta capa no es una baja eficacia individual, sino el agotamiento de munición y la posibilidad de que una amenaza sea detectada demasiado tarde.
+
+## 15.3. Láser defensivo
+
+El láser defensivo es una defensa de última hora.
+
+Su principal ventaja es que no utiliza munición física.
+
+Esto produce dos beneficios:
+
+- no puede quedarse sin munición;
+- no necesita reservar espacio interno para almacenar proyectiles o interceptores.
+
+Ese espacio puede utilizarse para otros sistemas.
+
+Por esta razón es una defensa muy popular incluso en naves que ya disponen de interceptores.
+
+### 15.3.1. Limitaciones
+
+El láser es menos efectivo que los misiles interceptores.
+
+Está pensado para destruir uno o varios misiles que hayan atravesado las capas anteriores, no para defender por sí solo una nave frente a una salva importante.
+
+Algunas naves con poca capacidad defensiva pueden utilizarlo como única defensa directa.
+
+### 15.3.2. Huella energética y preparación
+
+Mientras está activo, el láser defensivo incrementa mucho la huella energética de la nave.
+
+Por esta razón normalmente se mantiene apagado y se activa cuando existe una amenaza.
+
+El jugador debe recordar encenderlo con suficiente antelación para que pueda utilizarse cuando el misil entre en su ventana defensiva.
+
+Esto convierte su uso en una decisión táctica:
+
+- mantenerlo apagado favorece el sigilo;
+- encenderlo permite defenderse pero incrementa significativamente la detectabilidad energética.
+
+## 15.4. Defensa cinética
+
+La defensa cinética es también una defensa de última hora.
+
+Es más efectiva que el láser defensivo, pero consume munición.
+
+Tiene dos modos de disparo.
+
+### 15.4.1. Modo bajo
+
+El modo bajo:
+
+- consume munición lentamente;
+- permite mantener la defensa activa durante más tiempo;
+- ofrece una eficacia similar o solo moderadamente superior a la del láser.
+
+Está pensado para conservar munición cuando la amenaza no justifica el máximo consumo.
+
+### 15.4.2. Modo alto
+
+El modo alto:
+
+- utiliza una cadencia de fuego muy elevada;
+- puede destruir misiles con gran eficacia;
+- consume la munición extremadamente rápido.
+
+Durante un periodo corto puede convertirse en una defensa antimisil muy potente, pero una salva prolongada o varias oleadas pueden vaciar rápidamente sus reservas.
+
+La elección de modo permite al jugador intercambiar conservación de munición por capacidad inmediata de supervivencia.
+
+## 15.5. Señuelos
+
+Los señuelos son objetos físicos reales lanzados por la nave.
+
+No generan simplemente un eco ficticio en la interfaz.
+
+El jugador los utiliza de forma similar a un misil:
+
+1. selecciona un punto del espacio;
+2. configura una distancia o condición de activación;
+3. lanza el señuelo;
+4. el señuelo viaja hasta la posición programada;
+5. al activarse comienza a simular las características de una nave.
+
+Una vez activo, el señuelo debe ser especialmente difícil de identificar correctamente.
+
+Los sensores pueden detectarlo como un objeto real y comenzar su proceso normal de identificación.
+
+Durante ese proceso puede parecer:
+
+- un objeto desconocido;
+- una nave;
+- un tipo de nave plausible.
+
+Solo al alcanzar suficiente identificación puede descubrirse que en realidad es un señuelo.
+
+### 15.5.1. Uso táctico
+
+Los señuelos no sirven únicamente para defenderse de un misil ya lanzado.
+
+Pueden utilizarse de forma ofensiva y estratégica para manipular la información del enemigo.
+
+Ejemplos:
+
+- hacer creer que una nave se encuentra en otra posición;
+- provocar un barrido activo enemigo;
+- atraer una patrulla;
+- hacer gastar misiles;
+- saturar la interpretación de ecos;
+- preparar una emboscada;
+- simular una aproximación o retirada.
+
+Conceptualmente equivalen a lanzar una distracción en un juego de sigilo: su valor depende mucho de dónde y cuándo se utilicen.
+
+El diseño detallado de qué firma y huella pueden imitar, cuánto dura el engaño y cómo interactúan con seekers se definirá en el apartado específico de contramedidas.
+
+## 15.6. Jammer
+
+El Jammer ya está definido como una contramedida electrónica que sacrifica ocultación para degradar fuertemente la precisión enemiga.
+
+Puede ser una herramienta defensiva muy potente, especialmente cuando la nave ya ha sido localizada o cuando necesita dificultar una solución de tiro.
+
+Su diseño detallado queda pendiente.
+
+Debe estudiarse específicamente:
+
+- cuánto degrada sensores;
+- cómo afecta a seekers de misiles;
+- cuánto aumenta la huella energética;
+- cómo interactúa con sensores pasivos;
+- si existen distintos tipos o modos de Jammer;
+- qué contramedidas existen contra él.
+
+## 15.7. Maniobra y control de emisiones
+
+Apagar sistemas, reducir velocidad y modificar el estado de la nave no son contramedidas instalables, pero sí forman parte directa de la defensa.
+
+Pueden utilizarse para:
+
+- reducir firma;
+- reducir huella energética;
+- romper una solución de tiro;
+- hacer que ecos antiguos dejen de representar bien la posición actual;
+- dificultar la adquisición de un seeker;
+- aprovechar cuerpos celestes, polvo u otras condiciones ambientales.
+
+Estas mecánicas están integradas en los sistemas de sensores y entorno y no requieren una categoría de equipo separada.
+
+## 15.8. Filosofía general de las contramedidas
+
+Cada contramedida debe resolver un problema diferente:
+
+- **interceptor:** máxima eficacia a distancia, limitada por detección temprana, espacio y munición;
+- **láser:** defensa infinita en munición, pero limitada en eficacia y con gran huella energética;
+- **cinética:** mejor defensa terminal, limitada por munición y ritmo de consumo;
+- **señuelo:** manipulación de información y adquisición de blancos;
+- **Jammer:** degradación extrema de precisión a costa de una enorme exposición energética;
+- **maniobra y control de emisiones:** reducción de detectabilidad y ruptura de soluciones.
+
+La nave más protegida no es la que acumula más resistencia estructural, sino la que combina correctamente varias de estas capas.
 
 ---
 
@@ -1306,6 +1488,12 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 52. La firma física y la huella energética propias aplican una penalización exponencial a la Sensibilidad de los sensores pasivos direccionales.
 53. Los sensores pasivos direccionales heredan las reglas ambientales, de eco, identificación y Jammer de los sensores energéticos.
 54. Los cascos determinan los slots de sensores pasivos; no existe un máximo global adicional.
+55. Los misiles interceptores son la contramedida directa más eficaz, pero necesitan detección temprana y tienen munición voluminosa y limitada.
+56. El láser defensivo tiene munición infinita y ahorra espacio de almacenamiento, pero es una defensa terminal menos eficaz y aumenta mucho la huella energética mientras está activo.
+57. La defensa cinética es más eficaz que el láser a corta distancia y tiene modos de fuego bajo y alto que intercambian eficacia por consumo de munición.
+58. Los señuelos son objetos físicos lanzables a una posición y condición de activación; pueden parecer naves hasta que la identificación suficiente revela que son señuelos.
+59. Los señuelos pueden utilizarse tanto defensivamente como para engaño táctico, distracción y preparación de emboscadas.
+60. Maniobra, apagado de sistemas y reducción de velocidad forman parte de la defensa indirecta mediante control de firma y huella.
 
 ---
 
@@ -1333,6 +1521,10 @@ Quedan por concretar, entre otros:
 - seekers concretos;
 - guerra electrónica;
 - diseño detallado de Jammers e interferencia;
+- comportamiento exacto de interceptores;
+- parámetros y arcos de láseres defensivos;
+- parámetros, cadencia y munición de defensa cinética;
+- tipos, persistencia e imitación de firma/energía de señuelos;
 - enlaces de datos;
 - drones;
 - defensas concretas;

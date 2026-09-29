@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 0.3
+**Versión:** 0.4
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -283,15 +283,30 @@ No se introduce manualmente una distancia exacta.
 
 Se prevé utilizar aproximadamente cuatro bandas de distancia predeterminadas, aunque sus valores y nombres definitivos se diseñarán más adelante junto con la interfaz.
 
-Las bandas representan capas del espacio, no simples alcances máximos. Elegir una banda incorrecta puede hacer que el sensor no detecte un objeto que se encuentre en otra.
+Las bandas representan capas del espacio con límites estrictos y sin solapamiento. Por ejemplo, de forma puramente ilustrativa:
 
-## 8.3. Barridos discretos
+- corta: 0-50.000 km;
+- media: 50.001-150.000 km;
+- larga: siguiente intervalo;
+- extrema: intervalo más lejano.
+
+Elegir una banda incorrecta hace que el sensor no detecte un objeto situado fuera de ella.
+
+La sensibilidad efectiva se degrada con la distancia. Las bandas más lejanas aplican penalizaciones crecientes a la sensibilidad del sensor. Un sensor de sensibilidad baja puede resultar completamente inútil a partir de cierta banda sin necesidad de una regla especial por tipo de sensor.
+
+## 8.3. Barridos discretos y retardo de propagación
 
 Un sensor activo no proporciona un flujo continuo de posiciones.
 
-Cada uso realiza un barrido discreto y genera cero o más ecos.
+Cada uso ordena un barrido discreto y genera cero o más ecos.
 
-Cada barrido es una observación valiosa. La cadencia exacta queda pendiente de balance.
+El barrido en sí es instantáneo cuando ocurre, pero no ocurre en el mismo momento en que el jugador pulsa el botón. Existe un retardo antes de que el barrido alcance la franja seleccionada y ese retardo aumenta con la distancia.
+
+La detección se calcula respecto al estado real del objetivo en el momento en que el barrido ocurre efectivamente, no respecto a su posición cuando el jugador dio la orden.
+
+La orientación debe mantenerse de forma válida hasta que el barrido se ejecute. Si la nave modifica suficientemente su orientación antes de ese momento, el barrido deja de ser válido o se pierde.
+
+Cada barrido es una observación valiosa.
 
 ## 8.4. Detección determinista
 
@@ -385,6 +400,36 @@ La tecnología avanzada puede desplazar la frontera de eficiencia:
 
 Pero nunca elimina la frontera ni permite maximizar todas las características.
 
+## 8.9. Instalación y uso de sensores activos
+
+Una nave puede instalar como máximo dos sensores activos.
+
+Puede instalar dos sensores del mismo tipo o de tipos distintos, siempre que el diseño de la nave tenga capacidad para ello.
+
+Solo puede utilizarse un sensor activo a la vez. No se permiten barridos simultáneos con dos sensores.
+
+Una nave con dos sensores puede, por ejemplo, combinar:
+
+- un sensor muy sensible pero impreciso;
+- un sensor menos sensible pero mucho más preciso;
+
+o bien:
+
+- un sensor de firma;
+- un sensor energético.
+
+La elección de cuál utilizar en cada momento forma parte del gameplay.
+
+## 8.10. Huella energética durante el uso
+
+Por defecto, la huella energética de cualquier dispositivo existe de forma permanente mientras el dispositivo está activo, no únicamente durante el instante en que realiza una acción.
+
+Por tanto, un sensor activo contribuye a la huella energética de la nave durante todo el tiempo que permanece encendido.
+
+Algunos componentes concretos pueden romper esta regla y tener una huella reducida mientras están armados o preparados y una huella mucho mayor únicamente al utilizarse. Esta será una propiedad específica del componente y no una característica general de los sensores.
+
+No se prevé por ahora permitir al jugador seleccionar manualmente niveles de potencia de barrido.
+
 ---
 
 # 9. Tipos de sensores activos
@@ -426,30 +471,58 @@ El juego no asigna automáticamente un identificador persistente que revele qué
 
 El jugador debe interpretar la secuencia de observaciones.
 
-## 10.2. Cada eco puede contener información del sensor
+## 10.2. Identificación progresiva
 
-Además de la posición medida y el instante del barrido, un eco puede incluir información asociada al tipo de sensor.
+Cada eco contribuye no solo a estimar una posición, sino también a identificar qué clase de objeto está siendo observado.
 
-Ejemplos:
+La identificación progresa por niveles de conocimiento:
 
-- un barrido de firma puede devolver una medida de firma;
-- un barrido energético puede devolver una medida de huella energética.
+1. **Objeto:** se sabe únicamente que existe algo.
+2. **Categoría general:** nave, estación u otro tipo general de objeto.
+3. **Tipo funcional:** escolta, crucero, mercante u otra categoría equivalente.
+4. **Modelo o clase exacta:** identificación completa del objeto observado.
 
-Esto puede ayudar a distinguir objetos distintos.
+Cada nuevo eco compatible aumenta un porcentaje de certeza de identificación.
 
-## 10.3. Ambigüedad entre naves similares
+La certeza puede ser errónea durante las fases intermedias. Por ejemplo, un objeto puede ser clasificado provisionalmente como mercante y, tras obtener nuevos ecos, pasar a ser considerado una corbeta.
 
-Dos naves con la misma firma observada pueden resultar indistinguibles mediante un sensor de firma.
+Al alcanzar el 100 % se conoce el modelo o clase exacta con certeza.
 
-Dos naves con una huella energética equivalente pueden resultar indistinguibles mediante un sensor energético.
+La identificación adquirida no se degrada con el tiempo. Una vez identificado un modelo exacto, futuras detecciones de ese mismo objeto conservan esa información cuando el sistema puede asociarlas de manera válida al historial conocido.
 
-Si dos naves similares viajan juntas, los ecos de distintos barridos pueden cruzarse y hacer imposible saber qué eco corresponde a qué nave.
+La identificación y la precisión posicional son independientes. Un objeto puede estar perfectamente identificado y, al mismo tiempo, tener una posición muy imprecisa.
 
-Viajar en convoy puede utilizarse deliberadamente para dificultar la identificación y el seguimiento de unidades concretas.
+## 10.3. Identificación y precisión del sensor
 
-Un segundo tipo de sensor puede ayudar a separar objetivos cuando sus propiedades sean diferentes en esa otra dimensión.
+La velocidad y fiabilidad del progreso de identificación dependen principalmente de la **Precisión** del sensor.
 
-## 10.4. Nube estadística
+No existe una estadística separada de identificación.
+
+Los sensores de firma no tienen penalización base de identificación.
+
+Los sensores energéticos aplican una penalización base al progreso de identificación, por lo que en igualdad de precisión necesitan más ecos para alcanzar el mismo nivel de certeza.
+
+Las condiciones que degradan la precisión degradan también la identificación. Esto incluye:
+
+- distancia;
+- geometría desfavorable;
+- entorno;
+- Jammer;
+- otras interferencias que afecten a precisión.
+
+## 10.4. Ambigüedad entre naves similares
+
+La identificación de clase no implica identidad individual.
+
+Si tres naves idénticas viajan juntas y se alcanza el 100 % de identificación, el jugador puede saber que los tres objetos son, por ejemplo, corbetas de una clase concreta, pero no necesariamente qué eco de un barrido corresponde a qué nave concreta del barrido anterior.
+
+Si dos naves similares viajan juntas, los ecos de distintos barridos pueden cruzarse y hacer imposible mantener una asociación individual estable.
+
+Viajar en convoy puede utilizarse deliberadamente para dificultar el seguimiento de unidades concretas.
+
+Cambiar de sensor puede ayudar cuando las naves difieren en características que el otro tipo de sensor puede distinguir, pero solo puede utilizarse un sensor activo a la vez.
+
+## 10.5. Nube estadística
 
 Si un objeto permaneciera inmóvil y se realizasen muchísimos barridos, los ecos tenderían a formar una nube aproximadamente esférica alrededor de la posición real.
 
@@ -457,7 +530,7 @@ La posición real estaría aproximadamente en el centro estadístico de la nube,
 
 Debe estimar la posición con pocas detecciones.
 
-## 10.5. Movimiento aparente lento
+## 10.6. Movimiento aparente lento
 
 Las escalas espaciales son grandes.
 
@@ -467,11 +540,17 @@ En varios barridos próximos, los ecos tenderán a formar una nube que deriva gr
 
 Esto permite obtener una estimación de posición antes de disponer de una buena estimación de movimiento.
 
-## 10.6. Ecos antiguos
+## 10.7. Ecos antiguos
 
 Las observaciones anteriores permanecen visibles durante un tiempo y se degradan visualmente, por ejemplo mediante transparencia.
 
 El jugador puede comparar grupos de ecos separados temporalmente para estimar deriva, dirección y velocidad relativa.
+
+Si un nuevo barrido no detecta nada, el jugador recibe simplemente ausencia de ecos. El juego no indica si la zona estaba realmente vacía o si existían objetos por debajo del umbral de detección.
+
+Los ecos antiguos se conservan de acuerdo con las reglas visuales correspondientes; el juego no mantiene un marcador actualizado de un objeto que ya no está siendo detectado.
+
+Un mismo barrido devuelve todos los objetos del volumen explorado que superen individualmente el umbral de detección. No existe un límite artificial de contactos por barrido.
 
 ---
 
@@ -538,6 +617,7 @@ Conceptualmente:
 - detección: puede seguir siendo muy fácil;
 - identificación de presencia: muy fácil;
 - precisión de posición: muy degradada;
+- progreso de identificación de clase: degradado;
 - construcción de una solución de tiro: mucho más difícil.
 
 Esto encaja con la separación fundamental entre capacidad de detección y precisión de medición.
@@ -992,7 +1072,13 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 32. Ningún sistema, arma, misil, defensa o nave debe ser perfecto.
 33. Las naves muy grandes son doctrinalmente vulnerables por su enorme detectabilidad.
 34. Las grandes unidades necesitan escolta y no constituyen una progresión automática hacia 'mejor nave'.
-35. El Jammer aumenta de forma extrema la huella energética pero degrada fuertemente la precisión de los sensores enemigos.
+35. El Jammer aumenta de forma extrema la huella energética pero degrada fuertemente la precisión y la identificación de los sensores enemigos.
+36. Los barridos activos se ejecutan tras un retardo dependiente de la distancia y evalúan el estado real del objetivo en ese momento.
+37. Las bandas de distancia son intervalos discretos, estrictos y sin solapamiento.
+38. Una nave puede instalar como máximo dos sensores activos, pero solo utilizar uno a la vez.
+39. La identificación progresa desde objeto hasta modelo/clase exacta y no se degrada una vez alcanzada.
+40. Los sensores energéticos tienen una penalización base a la identificación respecto a los sensores de firma.
+41. La huella energética de un dispositivo existe mientras permanezca activo, salvo excepciones específicas definidas por el propio componente.
 
 ---
 
@@ -1006,7 +1092,9 @@ Quedan por concretar, entre otros:
 - distribución estadística del error de eco;
 - perfiles angulares exactos de sensores;
 - tipos concretos de sensores pasivos;
-- cadencia de barridos;
+- retardos exactos de propagación por banda de distancia;
+- progresión exacta de identificación por eco;
+- penalización exacta de identificación de sensores energéticos;
 - valores concretos de firma y huella energética;
 - modelo de generación eléctrica;
 - tamaños y espacio interno de cascos;

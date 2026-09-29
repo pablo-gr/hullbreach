@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 0.7
+**Versión:** 0.8
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -294,6 +294,8 @@ Elegir una banda incorrecta hace que el sensor no detecte un objeto situado fuer
 
 La sensibilidad efectiva se degrada con la distancia. Las bandas más lejanas aplican penalizaciones crecientes a la sensibilidad del sensor. Un sensor de sensibilidad baja puede resultar completamente inútil a partir de cierta banda sin necesidad de una regla especial por tipo de sensor.
 
+La distancia también degrada la Precisión. Incluso cuando un objetivo sigue superando el umbral de detección, un eco obtenido a mayor distancia tendrá normalmente un error posicional mayor que uno obtenido a corta distancia en las mismas condiciones.
+
 ## 8.3. Barridos discretos y retardo de propagación
 
 Un sensor activo no proporciona un flujo continuo de posiciones.
@@ -575,12 +577,17 @@ La mayoría de las contramedidas necesitan sensores defensivos para poder emplea
 
 ### 11.1.1. Características
 
-Los sensores defensivos tienen solamente dos características principales:
+Los sensores defensivos tienen tres características principales:
 
 - **Sensibilidad:** capacidad para detectar amenazas energéticas próximas.
+- **Precisión:** capacidad para localizar con exactitud el objeto detectado.
 - **Huella energética:** energía consumida y emitida mientras el sensor permanece activo.
 
-No tienen una estadística de Precisión. Una vez que detectan y marcan un misil, proporcionan la información mínima necesaria para que las contramedidas compatibles puedan utilizarse. El resultado posterior depende de la contramedida, no de una tirada de precisión del sensor defensivo.
+Su Precisión suele ser muy alta porque su función principal exige localizar con exactitud misiles rápidos y cercanos.
+
+Una vez que detectan y localizan un misil con calidad suficiente, habilitan las contramedidas compatibles. El resultado posterior depende de la contramedida empleada, no de una tirada abstracta del sensor defensivo.
+
+La distancia afecta tanto a la Sensibilidad como a la Precisión del sensor defensivo, igual que ocurre con los demás sensores.
 
 ### 11.1.2. Cobertura e interferencia propia
 
@@ -614,25 +621,39 @@ Los propulsores laterales o de maniobra también producen interferencia, pero mu
 
 Funcionan con un consumo energético reducido y principalmente con propelente, por lo que normalmente no generan una ceguera comparable a la del motor principal.
 
-### 11.1.3. Alcance
+### 11.1.3. Alcance y blancos detectables
 
 Su alcance es reducido.
 
-Están pensados principalmente para detectar misiles cuando ya se encuentran relativamente cerca. La Sensibilidad determina cuánto margen de reacción obtiene la nave antes del impacto.
+Están pensados principalmente para detectar misiles cuando ya se encuentran relativamente cerca. La Sensibilidad determina cuánto margen de reacción obtiene la nave antes del impacto y la Precisión determina la calidad de la localización.
+
+Sin embargo, no están limitados artificialmente a misiles.
+
+También pueden detectar y localizar:
+
+- naves;
+- estaciones;
+- otros objetos con huella energética suficiente;
+
+si estos se encuentran dentro de su corto alcance y superan el umbral de detección.
+
+Normalmente las naves enemigas no se aproximarán tanto, por lo que su uso principal sigue siendo defensivo. Pero una nave que entre en la burbuja de detección de un sensor defensivo puede ser localizada aunque la nave observadora carezca de sensores de búsqueda activos.
 
 Una nave con mejores sensores defensivos puede marcar una amenaza antes y mantener disponibles más capas de contramedidas.
 
-### 11.1.4. Identificación de misiles
+### 11.1.4. Identificación
 
-Los misiles detectados tienen un proceso de identificación progresiva.
+Los objetos detectados por sensores defensivos participan en un proceso de identificación progresiva.
 
-Mientras el sensor defensivo mantiene la detección, aumenta con el tiempo un porcentaje de identificación hasta alcanzar el 100 %.
+En el caso de un misil, mientras el sensor defensivo mantiene la detección aumenta con el tiempo un porcentaje de identificación hasta alcanzar el 100 %.
 
 Antes del 100 % la clasificación puede ser incompleta o incorrecta.
 
 Al alcanzar el 100 % se conoce exactamente el modelo de misil.
 
-La detección del misil y su identificación son independientes de la efectividad posterior de las contramedidas.
+Las naves y otros objetos detectados a corto alcance siguen igualmente las reglas generales de identificación aplicables a sensores energéticos.
+
+La detección y la identificación son independientes de la efectividad posterior de las armas o contramedidas.
 
 ### 11.1.5. Detección de barridos activos enemigos
 
@@ -785,8 +806,10 @@ Los sensores pasivos no forman una burbuja perfecta de conocimiento.
 Los sensores defensivos:
 
 - proporcionan alerta antimisil;
+- localizan amenazas con Precisión normalmente muy alta;
 - permiten utilizar contramedidas;
 - identifican progresivamente misiles;
+- pueden detectar y localizar naves u otros objetos si entran dentro de su corto alcance;
 - detectan barridos activos enemigos sin localizar su origen;
 - pueden quedar ciegos por la actividad de la propia nave.
 
@@ -1099,6 +1122,21 @@ Esto convierte su uso en una decisión táctica:
 - mantenerlo apagado favorece el sigilo;
 - encenderlo permite defenderse pero incrementa significativamente la detectabilidad energética.
 
+## 15.3.3. Uso contra naves
+
+Las armas defensivas no están restringidas artificialmente a misiles.
+
+Si los sensores defensivos detectan y localizan una nave enemiga dentro de su alcance, las armas defensivas capaces de alcanzarla pueden disparar contra ella.
+
+Esto permite que una nave sin sensores activos pueda combatir a muy corta distancia utilizando únicamente:
+
+- sensores defensivos;
+- láser defensivo;
+- defensa cinética;
+- otras armas defensivas compatibles que se definan más adelante.
+
+Estas armas siguen estando optimizadas para defensa terminal y no sustituyen a un armamento ofensivo dedicado a distancias tácticas normales.
+
 ## 15.4. Defensa cinética
 
 La defensa cinética es también una defensa de última hora.
@@ -1175,7 +1213,30 @@ Conceptualmente equivalen a lanzar una distracción en un juego de sigilo: su va
 
 El diseño detallado de qué firma y huella pueden imitar, cuánto dura el engaño y cómo interactúan con seekers se definirá en el apartado específico de contramedidas.
 
-## 15.6. Jammer
+## 15.6. Configuraciones civiles y paramilitares
+
+No todas las naves necesitan sensores de búsqueda ni armamento ofensivo.
+
+Algunas naves civiles o de seguridad pueden equipar únicamente:
+
+- sensores defensivos;
+- láser defensivo;
+- defensa cinética;
+- otras contramedidas básicas.
+
+Esto puede ser habitual en:
+
+- policía;
+- seguridad privada;
+- piratas de baja capacidad;
+- naves auxiliares;
+- determinados transportes armados.
+
+Estas naves no pueden buscar y atacar objetivos a gran distancia como una nave militar equipada con sensores activos, pero sí pueden detectar, identificar y atacar objetos que entren dentro de su corta burbuja defensiva.
+
+Otras naves civiles pueden carecer completamente de sensores defensivos y armamento, como determinados cargueros baratos o naves diseñadas exclusivamente para transporte.
+
+## 15.7. Jammer
 
 El Jammer ya está definido como una contramedida electrónica que sacrifica ocultación para degradar fuertemente la precisión enemiga.
 
@@ -1192,7 +1253,7 @@ Debe estudiarse específicamente:
 - si existen distintos tipos o modos de Jammer;
 - qué contramedidas existen contra él.
 
-## 15.7. Maniobra y control de emisiones
+## 15.8. Maniobra y control de emisiones
 
 Apagar sistemas, reducir velocidad y modificar el estado de la nave no son contramedidas instalables, pero sí forman parte directa de la defensa.
 
@@ -1207,7 +1268,7 @@ Pueden utilizarse para:
 
 Estas mecánicas están integradas en los sistemas de sensores y entorno y no requieren una categoría de equipo separada.
 
-## 15.8. Filosofía general de las contramedidas
+## 15.9. Filosofía general de las contramedidas
 
 Cada contramedida debe resolver un problema diferente:
 
@@ -1494,6 +1555,11 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 58. Los señuelos son objetos físicos lanzables a una posición y condición de activación; pueden parecer naves hasta que la identificación suficiente revela que son señuelos.
 59. Los señuelos pueden utilizarse tanto defensivamente como para engaño táctico, distracción y preparación de emboscadas.
 60. Maniobra, apagado de sistemas y reducción de velocidad forman parte de la defensa indirecta mediante control de firma y huella.
+61. La distancia degrada tanto la Sensibilidad como la Precisión de los sensores.
+62. Los sensores defensivos tienen Precisión normalmente muy alta y deben localizar exactamente las amenazas para habilitar armas y contramedidas.
+63. Los sensores defensivos pueden detectar e identificar naves y otros objetos energéticos que entren dentro de su corto alcance.
+64. Las armas defensivas pueden disparar contra naves localizadas por sensores defensivos cuando el blanco se encuentra dentro de su alcance.
+65. Algunas naves civiles, policiales, piratas o auxiliares pueden depender exclusivamente de sensores y armas defensivas; otras pueden carecer completamente de armamento y sensores defensivos.
 
 ---
 
@@ -1507,6 +1573,7 @@ Quedan por concretar, entre otros:
 - distribución estadística del error de eco;
 - perfiles angulares exactos de sensores;
 - modelos concretos de sensores defensivos y pasivos direccionales;
+- valores exactos de Precisión de sensores defensivos;
 - valores exactos de los sectores ciegos de sensores defensivos;
 - curva exacta de penalización exponencial por firma y huella propia en sensores pasivos direccionales;
 - retardos exactos de propagación por banda de distancia;

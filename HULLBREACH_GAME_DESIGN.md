@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 0.8
+**Versión:** 0.9
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -207,9 +207,21 @@ Depende principalmente de:
 
 - diseño y tamaño del casco;
 - características stealth del diseño;
-- velocidad.
+- estado del motor principal;
+- estela de propelente generada durante aceleración o desaceleración.
 
-La tripulación puede reducirla principalmente reduciendo velocidad. No puede apagarla.
+La velocidad absoluta de la nave no aumenta por sí misma la firma.
+
+Cuando el motor principal acelera o desacelera la nave, expulsa propelente y genera una larga estela detectable que incrementa fuertemente la firma física.
+
+Cuando el motor deja de emitir propelente, esa contribución desaparece y la firma vuelve hacia su nivel base, independientemente de que la nave continúe desplazándose a gran velocidad.
+
+En el espacio no es necesario mantener el motor encendido para conservar velocidad. Una nave puede:
+
+1. encender motores;
+2. acelerar intensamente, aumentando mucho su firma durante la maniobra;
+3. apagar motores;
+4. continuar desplazándose por inercia a gran velocidad con una firma física mucho menor.
 
 Las naves pueden tener una firma base anormalmente alta o baja.
 
@@ -446,7 +458,7 @@ Características generales:
 
 - especialmente eficaz a distancias medias y cortas;
 - más difícil de evadir cuando el objetivo está suficientemente cerca;
-- el objetivo puede reducir su firma principalmente reduciendo velocidad;
+- el objetivo puede reducir su firma principalmente apagando el motor principal y dejando de emitir propelente;
 - se ve muy afectado por el entorno.
 
 ## 9.2. Sensor energético
@@ -722,18 +734,22 @@ Motores, sensores activos, armas, defensas, comunicaciones y otros sistemas pued
 
 Otros sensores pasivos pueden permanecer encendidos al mismo tiempo. No interfieren por ser sensores, sino únicamente por la huella energética adicional que generan.
 
-### 11.2.4. Movimiento y firma
+### 11.2.4. Propulsión y firma
 
 Cualquier factor que aumente la firma física propia perjudica al sensor pasivo direccional.
 
-Esto incluye aumentar la velocidad cuando la velocidad incrementa la firma de la nave.
+La velocidad absoluta no penaliza el sensor por sí misma.
+
+Lo que perjudica fuertemente al sensor es utilizar el motor principal para acelerar o desacelerar, porque la estela de propelente aumenta la firma física de la propia nave.
 
 Por tanto, una nave que quiera utilizar este sensor eficazmente tenderá a:
 
-- mantener firma muy baja;
+- mantener una firma base muy baja;
 - apagar el motor principal;
 - reducir sistemas activos;
 - desplazarse principalmente por inercia.
+
+Una nave puede moverse muy rápido y seguir utilizando eficazmente un sensor pasivo direccional si alcanzó esa velocidad antes, apagó el motor y su firma restante es suficientemente baja.
 
 ### 11.2.5. Alcance y sensibilidad
 
@@ -1255,11 +1271,11 @@ Debe estudiarse específicamente:
 
 ## 15.8. Maniobra y control de emisiones
 
-Apagar sistemas, reducir velocidad y modificar el estado de la nave no son contramedidas instalables, pero sí forman parte directa de la defensa.
+Apagar sistemas, cortar el motor principal y modificar el estado de la nave no son contramedidas instalables, pero sí forman parte directa de la defensa.
 
 Pueden utilizarse para:
 
-- reducir firma;
+- reducir firma eliminando la estela de propelente;
 - reducir huella energética;
 - romper una solución de tiro;
 - hacer que ecos antiguos dejen de representar bien la posición actual;
@@ -1294,7 +1310,7 @@ Sirve para:
 - evitar zonas muertas;
 - mantener o perder ecos;
 - aprovechar cuerpos celestes y polvo;
-- modificar firma mediante velocidad;
+- modificar firma mediante uso o apagado del motor principal;
 - cambiar la trayectoria esperada por el atacante;
 - dificultar seekers estrechos;
 - romper soluciones de tiro.
@@ -1554,12 +1570,15 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 57. La defensa cinética es más eficaz que el láser a corta distancia y tiene modos de fuego bajo y alto que intercambian eficacia por consumo de munición.
 58. Los señuelos son objetos físicos lanzables a una posición y condición de activación; pueden parecer naves hasta que la identificación suficiente revela que son señuelos.
 59. Los señuelos pueden utilizarse tanto defensivamente como para engaño táctico, distracción y preparación de emboscadas.
-60. Maniobra, apagado de sistemas y reducción de velocidad forman parte de la defensa indirecta mediante control de firma y huella.
+60. Maniobra, apagado de sistemas y apagado del motor principal forman parte de la defensa indirecta mediante control de firma y huella.
 61. La distancia degrada tanto la Sensibilidad como la Precisión de los sensores.
 62. Los sensores defensivos tienen Precisión normalmente muy alta y deben localizar exactamente las amenazas para habilitar armas y contramedidas.
 63. Los sensores defensivos pueden detectar e identificar naves y otros objetos energéticos que entren dentro de su corto alcance.
 64. Las armas defensivas pueden disparar contra naves localizadas por sensores defensivos cuando el blanco se encuentra dentro de su alcance.
 65. Algunas naves civiles, policiales, piratas o auxiliares pueden depender exclusivamente de sensores y armas defensivas; otras pueden carecer completamente de armamento y sensores defensivos.
+66. La velocidad absoluta de una nave no aumenta su firma física.
+67. El uso del motor principal durante aceleración o desaceleración aumenta fuertemente la firma mediante la estela de propelente.
+68. Una nave puede acelerar, apagar motores y continuar a gran velocidad por inercia con una firma mucho menor.
 
 ---
 
@@ -1584,6 +1603,7 @@ Quedan por concretar, entre otros:
 - tamaños y espacio interno de cascos;
 - curva exacta energía/rendimiento;
 - movimiento y aceleración;
+- duración, persistencia y magnitud exacta de la firma producida por estelas de propelente;
 - tiempos de viaje y cinemática de misiles;
 - seekers concretos;
 - guerra electrónica;

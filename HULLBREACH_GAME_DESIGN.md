@@ -1580,8 +1580,6 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 33. Las naves muy grandes son doctrinalmente vulnerables por su enorme detectabilidad.
 34. Las grandes unidades necesitan escolta y no constituyen una progresión automática hacia 'mejor nave'.
 35. El Jammer aumenta de forma extrema la huella energética pero degrada fuertemente la precisión y la identificación de los sensores enemigos.
-69. El Jammer afecta a sensores de firma y energéticos de forma distinta: la penalización es moderada para firma y muy alta para energía.
-70. El Jammer no reduce la Sensibilidad energética contra su emisor; su enorme huella hace que detectarlo energéticamente sea muy fácil aunque localizarlo con precisión sea difícil.
 36. Los barridos activos se ejecutan tras un retardo dependiente de la distancia y evalúan el estado real del objetivo en ese momento.
 37. Las bandas de distancia son intervalos discretos, estrictos y sin solapamiento.
 38. Una nave puede instalar como máximo dos sensores activos, pero solo utilizar uno a la vez.
@@ -1615,6 +1613,8 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 66. La velocidad absoluta de una nave no aumenta su firma física.
 67. El uso del motor principal durante aceleración o desaceleración aumenta fuertemente la firma mediante la estela de propelente.
 68. Una nave puede acelerar, apagar motores y continuar a gran velocidad por inercia con una firma mucho menor.
+69. El Jammer afecta a sensores de firma y energéticos de forma distinta: la penalización es moderada para firma y muy alta para energía.
+70. El Jammer no reduce la Sensibilidad energética contra su emisor; su enorme huella hace que detectarlo energéticamente sea muy fácil aunque localizarlo con precisión sea difícil.
 
 ---
 

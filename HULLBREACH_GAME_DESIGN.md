@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 0.9
+**Versión:** 1.0
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -863,17 +863,51 @@ Por tanto, el Jammer crea una situación deliberadamente paradójica:
 
 El Jammer no debe convertir la detección en una tirada aleatoria ni ocultar artificialmente la existencia de la nave.
 
-Cuando un sensor consigue detectar una nave bajo interferencia, sigue generando un eco, pero el radio máximo de error de la medición aumenta considerablemente.
+Cuando un sensor consigue detectar una nave bajo interferencia, sigue generando un eco, pero el radio máximo de error de la medición aumenta.
+
+El Jammer afecta a sensores de firma y sensores energéticos, pero no de la misma forma.
+
+### 12.2.1. Sensores energéticos
+
+Los sensores energéticos son los más afectados.
+
+La enorme emisión del Jammer hace que detectar la presencia de la nave sea muy fácil, pero dificulta enormemente determinar con precisión el centro real de esa emisión.
+
+Por tanto:
+
+- la Sensibilidad contra la nave no disminuye;
+- la detección puede incluso resultar más fácil por la enorme huella energética;
+- la Precisión sufre una penalización muy alta;
+- la identificación progresa mucho más lentamente;
+- construir una solución de tiro precisa se vuelve especialmente difícil.
+
+### 12.2.2. Sensores de firma
+
+Los sensores de firma también sufren interferencia, pero en menor medida.
+
+El Jammer degrada:
+
+- la Precisión;
+- la identificación;
+
+pero no elimina la información física disponible sobre el objetivo.
+
+Por tanto, frente a una nave usando Jammer, cambiar a un sensor de firma puede ser una respuesta táctica válida para intentar mejorar la solución de tiro.
+
+La penalización sobre sensores de firma debe ser moderada en comparación con la aplicada a sensores energéticos.
+
+### 12.2.3. Principio general
 
 Conceptualmente:
 
-- detección: puede seguir siendo muy fácil;
-- identificación de presencia: muy fácil;
-- precisión de posición: muy degradada;
-- progreso de identificación de clase: degradado;
-- construcción de una solución de tiro: mucho más difícil.
+- detección energética: muy fácil;
+- precisión energética: muy degradada;
+- identificación energética: muy degradada;
+- detección por firma: afectada mucho menos;
+- precisión por firma: degradada de forma moderada;
+- identificación por firma: degradada de forma moderada.
 
-Esto encaja con la separación fundamental entre capacidad de detección y precisión de medición.
+Esto refuerza la separación entre capacidad de detección y calidad de la solución obtenida.
 
 ## 12.3. Coste táctico
 
@@ -907,8 +941,8 @@ Más adelante deberán definirse:
 - potencia e intensidad;
 - consumo energético;
 - huella energética generada;
-- efecto exacto sobre precisión de sensores de firma;
-- efecto exacto sobre precisión de sensores energéticos;
+- magnitud exacta de la penalización sobre precisión de sensores de firma;
+- magnitud exacta de la penalización sobre precisión de sensores energéticos;
 - efecto sobre seekers de misiles;
 - interacción con sensores pasivos;
 - posibilidad de localizar la fuente mediante triangulación;
@@ -1546,6 +1580,8 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 33. Las naves muy grandes son doctrinalmente vulnerables por su enorme detectabilidad.
 34. Las grandes unidades necesitan escolta y no constituyen una progresión automática hacia 'mejor nave'.
 35. El Jammer aumenta de forma extrema la huella energética pero degrada fuertemente la precisión y la identificación de los sensores enemigos.
+69. El Jammer afecta a sensores de firma y energéticos de forma distinta: la penalización es moderada para firma y muy alta para energía.
+70. El Jammer no reduce la Sensibilidad energética contra su emisor; su enorme huella hace que detectarlo energéticamente sea muy fácil aunque localizarlo con precisión sea difícil.
 36. Los barridos activos se ejecutan tras un retardo dependiente de la distancia y evalúan el estado real del objetivo en ese momento.
 37. Las bandas de distancia son intervalos discretos, estrictos y sin solapamiento.
 38. Una nave puede instalar como máximo dos sensores activos, pero solo utilizar uno a la vez.

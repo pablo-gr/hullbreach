@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.7
+**Versión:** 1.8
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -1744,6 +1744,74 @@ Sus principales limitaciones son:
 
 La principal debilidad de esta capa no es una baja eficacia individual, sino detectar demasiado tarde, perder calidad de guiado o quedarse sin interceptores.
 
+### 15.2.6. Pérdida temporal de solución
+
+Si los sensores defensivos pierden temporalmente la solución sobre la amenaza:
+
+- el interceptor continúa hacia la última posición estimada conocida;
+- espera nuevas actualizaciones de guiado;
+- reanuda las correcciones en cuanto la nave vuelve a obtener una solución suficientemente buena.
+
+El interceptor no dispone de un seeker autónomo equivalente al de un misil ofensivo.
+
+### 15.2.7. Cadencia de guiado
+
+El interceptor recibe nuevas correcciones cada vez que los sensores defensivos generan una nueva medición útil sobre la amenaza.
+
+No existe una cadencia de guiado independiente del interceptor.
+
+Por tanto, la frecuencia y calidad de actualización dependen directamente del sensor defensivo que mantiene el seguimiento.
+
+### 15.2.8. Carga explosiva y detonación de proximidad
+
+Los interceptores también llevan una carga explosiva.
+
+Su objetivo no es necesariamente impactar físicamente contra el misil enemigo.
+
+Cuando los sensores defensivos estiman que el interceptor ha alcanzado una distancia adecuada respecto a la amenaza:
+
+1. calculan la separación estimada;
+2. ordenan la detonación del interceptor;
+3. la explosión intenta alcanzar al misil o torpedo enemigo dentro de su radio efectivo.
+
+Cuanto mayor sea la potencia de la carga explosiva del interceptor, mayor puede ser la distancia útil de detonación.
+
+La detonación depende de la posición **estimada** del blanco.
+
+Por tanto, un error de detección o una Precision insuficiente de los sensores defensivos puede provocar:
+
+- detonación demasiado temprana;
+- detonación demasiado tardía;
+- explosión fuera del radio eficaz;
+- fallo completo de la intercepción.
+
+La fórmula exacta de decisión de detonación se definirá durante la implementación de bajo nivel.
+
+### 15.2.9. Efecto sobre varias amenazas
+
+La explosión del interceptor es física y puede afectar a cualquier arma enemiga situada dentro de su radio efectivo.
+
+Si dos o más misiles o torpedos están suficientemente próximos cuando detona:
+
+- todos pueden resultar destruidos;
+- sus propias ojivas pueden detonar si ya estaban armadas.
+
+Esto permite que una única intercepción bien situada destruya varias amenazas de una salva compacta.
+
+### 15.2.10. Uso contra naves
+
+Los interceptores no están restringidos artificialmente a misiles.
+
+Si los sensores defensivos detectan y localizan una nave enemiga suficientemente cercana, pueden guiar un interceptor contra ella.
+
+Sin embargo:
+
+- su carga explosiva suele ser pequeña;
+- están optimizados para destruir misiles frágiles;
+- normalmente son poco eficaces contra naves blindadas.
+
+Por tanto pueden utilizarse contra naves, pero no sustituyen al armamento ofensivo dedicado.
+
 ## 15.3. Láser defensivo
 
 El láser defensivo es una defensa de última hora.
@@ -2290,6 +2358,12 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 124. Los interceptores son misiles defensivos de menor alcance y velocidad típica, pero mayor Maneuverability que los misiles ofensivos.
 125. Los interceptores son guiados externamente por los sensores defensivos de la nave lanzadora y dependen de la posición estimada que estos proporcionan.
 126. La degradación o pérdida de la solución del sensor defensivo degrada directamente el guiado de los interceptores.
+127. Si se pierde temporalmente la solución, el interceptor continúa hacia la última posición estimada y reanuda correcciones cuando vuelve a recibir una solución válida.
+128. La cadencia de guiado del interceptor es la cadencia de medición útil del sensor defensivo que lo guía.
+129. Los interceptores usan cargas explosivas de proximidad cuya detonación es ordenada por los sensores defensivos cuando estiman que el interceptor está a distancia adecuada.
+130. Un error de Precision del sensor defensivo puede hacer fallar la detonación de proximidad del interceptor.
+131. Una explosión de interceptor puede destruir simultáneamente varias amenazas si están dentro de su radio efectivo.
+132. Los interceptores pueden atacar naves detectadas por sensores defensivos, aunque su baja potencia los hace poco eficaces contra blancos blindados.
 
 ---
 
@@ -2330,9 +2404,9 @@ Quedan por concretar, entre otros:
 - tamaños de área y Huella energética de modelos de Jammer;
 - regla de prioridad para Jammers solapados de distinta potencia;
 - tiempos de activación de dispositivos;
-- comportamiento del interceptor cuando la nave pierde temporalmente la solución sobre el blanco;
-- cadencia de actualización y enlace de guiado de interceptores;
-- condición exacta de impacto/detonación del interceptor;
+- fórmula exacta de detonación de proximidad del interceptor;
+- radios efectivos y potencias de cargas explosivas de interceptores;
+- comportamiento de detonaciones múltiples cuando una explosión alcanza varias ojivas enemigas;
 - parámetros y arcos de láseres defensivos;
 - parámetros, cadencia y munición de defensa cinética;
 - tipos, persistencia e imitación de firma/energía de señuelos;

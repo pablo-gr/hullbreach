@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.3
+**Versión:** 1.4
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -1191,7 +1191,22 @@ La Sensitivity funciona como en cualquier otro sensor.
 
 La Precision determina la calidad con la que el seeker estima la posición del blanco una vez detectado.
 
-Distancia, geometría, entorno y Jammer pueden degradar su funcionamiento según las reglas generales aplicables a su familia de sensor.
+Sin embargo, la Precision suele ser menos crítica en un seeker que en un sensor de búsqueda de largo alcance.
+
+La razón es geométrica: el error absoluto producido por una determinada calidad de medición disminuye enormemente cuando la distancia al blanco es pequeña.
+
+Un sensor de búsqueda que observa un objetivo a millones de kilómetros necesita una Precision alta para producir una localización útil. Un seeker que ya se encuentra a cientos de metros del blanco puede obtener una posición suficientemente exacta incluso con una Precision muy baja.
+
+Por tanto, el seeker está diseñado para acercarse mucho al blanco —idealmente hasta contacto o distancia de detonación— y convertir progresivamente una medición inicialmente mediocre en una solución terminal extremadamente precisa gracias a la reducción de distancia.
+
+Esto no hace irrelevante la Precision:
+
+- afecta a la calidad de la adquisición cuando el seeker todavía está lejos;
+- afecta a la capacidad de mantener el lock durante la aproximación;
+- determina cuánto perjudican el Jammer y otras interferencias;
+- una Precision extremadamente degradada todavía puede provocar pérdida de seguimiento.
+
+Distancia, geometría, entorno y Jammer degradan su funcionamiento según las reglas generales aplicables a su familia de sensor.
 
 El Jammer no realiza una tirada especial contra el misil: degrada el seeker como degradaría cualquier otro sensor.
 
@@ -1971,6 +1986,8 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 91. Los torpedos suelen conseguir mayor alcance porque conservan combustible durante la fase inerte.
 92. Los misiles suelen llevar cargas explosivas menores porque dedican más volumen a combustible y propulsión.
 93. Un impacto directo antinave suele ser letal, pero una detonación cercana también puede causar daños graves según carga, distancia y blindaje.
+94. La Precision de un seeker existe y funciona como en cualquier sensor, pero suele ser menos crítica en fase terminal porque el error absoluto disminuye fuertemente al reducirse la distancia al blanco.
+95. Los seekers pueden ser de firma o de energía y heredan las interacciones ambientales y de Jammer de su familia de sensor.
 
 ---
 

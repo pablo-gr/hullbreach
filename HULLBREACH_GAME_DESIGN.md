@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.8
+**Versión:** 1.9
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -1814,9 +1814,11 @@ Por tanto pueden utilizarse contra naves, pero no sustituyen al armamento ofensi
 
 ## 15.3. Láser defensivo
 
-El láser defensivo es una defensa de última hora.
+El láser defensivo es una defensa de última hora guiada por los sensores defensivos de la nave.
 
-Su principal ventaja es que no utiliza munición física.
+Como regla general, todas las defensas activas de la nave dependen de los sensores defensivos para localizar y seguir amenazas. Los señuelos son la excepción principal porque, una vez lanzados, funcionan de forma autónoma.
+
+El láser no utiliza munición física.
 
 Esto produce dos beneficios:
 
@@ -1827,41 +1829,128 @@ Ese espacio puede utilizarse para otros sistemas.
 
 Por esta razón es una defensa muy popular incluso en naves que ya disponen de interceptores.
 
-### 15.3.1. Limitaciones
+### 15.3.1. Guiado y seguimiento
 
-El láser es menos efectivo que los misiles interceptores.
+El láser no dispone de un sensor autónomo propio para localizar el blanco.
 
-Está pensado para destruir uno o varios misiles que hayan atravesado las capas anteriores, no para defender por sí solo una nave frente a una salva importante.
+Los sensores defensivos proporcionan continuamente la posición estimada de la amenaza.
 
-Algunas naves con poca capacidad defensiva pueden utilizarlo como única defensa directa.
+El láser:
 
-### 15.3.2. Huella energética y preparación
+1. orienta el emisor hacia esa posición estimada;
+2. dispara un pulso corto;
+3. debe mantener el seguimiento durante la duración del pulso;
+4. repite nuevos pulsos hasta destruir el blanco o perder la solución.
 
-Mientras está activo, el láser defensivo incrementa mucho la huella energética de la nave.
+Si la posición estimada es incorrecta por falta de Precision, Jammer u otras interferencias, el pulso puede fallar.
 
-Por esta razón normalmente se mantiene apagado y se activa cuando existe una amenaza.
+La precisión absoluta mejora naturalmente cuando el misil se acerca, por lo que el láser se convierte de forma emergente en una defensa especialmente eficaz a corta distancia.
 
-El jugador debe recordar encenderlo con suficiente antelación para que pueda utilizarse cuando el misil entre en su ventana defensiva.
+### 15.3.2. Pulsos y daño térmico
 
-Esto convierte su uso en una decisión táctica:
+El láser dispara **pulsos cortos**, no un haz continuo permanente.
 
-- mantenerlo apagado favorece el sigilo;
-- encenderlo permite defenderse pero incrementa significativamente la detectabilidad energética.
+Cada impacto deposita una cantidad de energía o calor sobre el blanco.
 
-## 15.3.3. Uso contra naves
+El láser tiene una característica de **Damage/Heat** que determina cuánto daño térmico produce cada impacto.
+
+Los misiles y torpedos son blancos frágiles y normalmente necesitan aproximadamente **2 o 3 impactos** de un láser defensivo típico para quedar destruidos, aunque determinados modelos pueden necesitar más o menos.
+
+El daño se acumula mediante impactos sucesivos.
+
+Contra una nave blindada la misma cantidad de energía suele resultar muy poco eficaz, por lo que un láser defensivo puede disparar contra ella pero no está diseñado para perforar blindaje pesado.
+
+### 15.3.3. Alcance
+
+El láser defensivo no tiene por ahora un alcance máximo artificial propio.
+
+Su alcance práctico depende principalmente de:
+
+- alcance de los sensores defensivos;
+- Precision de la solución;
+- capacidad de seguimiento del emisor;
+- movimiento del blanco.
+
+Si el sensor defensivo no puede localizar la amenaza con suficiente calidad, el láser tampoco puede emplearse eficazmente contra ella.
+
+### 15.3.4. Características
+
+Un láser defensivo tiene como mínimo:
+
+- **Damage/Heat:** energía térmica depositada por impacto;
+- **Tracking speed / Mobility:** velocidad con la que puede girar y apuntar a un nuevo objetivo;
+- **Active energy footprint:** huella mientras está encendido y preparado;
+- **Firing energy footprint:** huella adicional o total mientras dispara;
+- **Activation delay:** tiempo entre la orden de encendido y el momento en que puede disparar;
+- arco físico de tiro.
+
+La velocidad de seguimiento limita cuánto puede corregir el apuntado durante un pulso y cuánto tarda en cambiar de objetivo.
+
+### 15.3.5. Huella energética y preparación
+
+El láser produce Huella energética simplemente por estar activo.
+
+Mientras dispara, la Huella energética aumenta todavía más.
+
+Por tanto existen dos estados energéticos distintos:
+
+- **activo/preparado:** consumo y huella elevados;
+- **disparando:** consumo y huella aún mayores.
+
+Normalmente se mantiene apagado para reducir detectabilidad.
+
+El jugador debe activarlo con suficiente antelación para superar su Activation delay antes de que el misil entre en la ventana terminal.
+
+### 15.3.6. Arco de tiro y orientación de la nave
+
+El láser tiene un arco físico de tiro.
+
+La interfaz no obliga al jugador a micromanejarlo.
+
+Una nave puede resolver la cobertura de dos maneras:
+
+- instalando varios láseres en posiciones opuestas o complementarias;
+- orientándose automáticamente cuando ningún emisor tiene un arco válido hacia el objetivo seleccionado.
+
+En una situación terminal, la capacidad real de la nave para completar ese giro a tiempo puede limitar la defensa.
+
+### 15.3.7. Selección y cola de objetivos
+
+Un emisor láser solo puede atacar **un objetivo cada vez**.
+
+El jugador selecciona manualmente las amenazas que quiere atacar.
+
+Puede seleccionar varios objetivos y formar una cola.
+
+El láser los ataca en el orden en que fueron seleccionados.
+
+Cuando destruye el objetivo actual, pierde la solución o recibe una nueva orden, pasa al siguiente objetivo de la cola, limitado por su Tracking speed / Mobility.
+
+No existe reparto automático inteligente de blancos por defecto.
+
+### 15.3.8. Destrucción de misiles y torpedos
+
+Cuando el láser destruye un misil o torpedo se aplican las reglas normales de la ojiva:
+
+- si la carga ya estaba armada o el torpedo ya estaba activo, puede detonar en el punto de destrucción;
+- si un torpedo todavía estaba inerte y su carga no estaba armada, destruirlo no provoca la explosión antinave principal.
+
+Por tanto, destruir un arma demasiado cerca puede seguir causando daños graves si su ojiva estaba activa.
+
+### 15.3.9. Uso contra naves
 
 Las armas defensivas no están restringidas artificialmente a misiles.
 
-Si los sensores defensivos detectan y localizan una nave enemiga dentro de su alcance, las armas defensivas capaces de alcanzarla pueden disparar contra ella.
+Si los sensores defensivos detectan y localizan una nave enemiga dentro de su alcance, el láser puede disparar contra ella.
 
-Esto permite que una nave sin sensores activos pueda combatir a muy corta distancia utilizando únicamente:
+Utiliza exactamente la misma mecánica:
 
-- sensores defensivos;
-- láser defensivo;
-- defensa cinética;
-- otras armas defensivas compatibles que se definan más adelante.
+- solución proporcionada por sensores defensivos;
+- seguimiento;
+- pulsos;
+- Damage/Heat acumulado.
 
-Estas armas siguen estando optimizadas para defensa terminal y no sustituyen a un armamento ofensivo dedicado a distancias tácticas normales.
+Sin embargo, un láser defensivo suele ser poco potente frente a blindaje naval y no sustituye a un armamento ofensivo dedicado.
 
 ## 15.4. Defensa cinética
 
@@ -2364,6 +2453,14 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 130. Un error de Precision del sensor defensivo puede hacer fallar la detonación de proximidad del interceptor.
 131. Una explosión de interceptor puede destruir simultáneamente varias amenazas si están dentro de su radio efectivo.
 132. Los interceptores pueden atacar naves detectadas por sensores defensivos, aunque su baja potencia los hace poco eficaces contra blancos blindados.
+133. Todas las defensas activas salvo los señuelos dependen de los sensores defensivos para localizar y seguir amenazas.
+134. El láser defensivo dispara pulsos cortos y acumula Damage/Heat mediante impactos sucesivos.
+135. Los misiles suelen necesitar aproximadamente 2 o 3 impactos de un láser defensivo típico para ser destruidos, aunque depende del modelo.
+136. El alcance práctico del láser depende principalmente del sensor defensivo y no tiene por ahora un límite artificial independiente.
+137. Los láseres defensivos tienen Damage/Heat, Tracking speed/Mobility, Active energy footprint, Firing energy footprint, Activation delay y arco de tiro.
+138. Un emisor láser solo puede atacar un objetivo cada vez; el jugador puede crear una cola manual y se respeta el orden de selección.
+139. El láser debe mantener seguimiento durante cada pulso y un error de Precision puede hacer que falle.
+140. Destruir con láser un arma activa y armada puede detonar su ojiva; destruir un torpedo todavía inerte no provoca la explosión antinave principal.
 
 ---
 
@@ -2407,7 +2504,11 @@ Quedan por concretar, entre otros:
 - fórmula exacta de detonación de proximidad del interceptor;
 - radios efectivos y potencias de cargas explosivas de interceptores;
 - comportamiento de detonaciones múltiples cuando una explosión alcanza varias ojivas enemigas;
-- parámetros y arcos de láseres defensivos;
+- valores concretos de Damage/Heat de láseres defensivos;
+- duración y cadencia de pulsos;
+- valores de Tracking speed/Mobility;
+- huellas Active y Firing;
+- Activation delay y arcos concretos de láseres defensivos;
 - parámetros, cadencia y munición de defensa cinética;
 - tipos, persistencia e imitación de firma/energía de señuelos;
 - drones;

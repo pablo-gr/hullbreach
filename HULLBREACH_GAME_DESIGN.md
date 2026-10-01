@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.11
+**Versión:** 1.12
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -2271,20 +2271,29 @@ El combate tridimensional debe importar porque los sensores activos son muy dire
 
 # 17. Armas y defensas como problemas distintos
 
-Las armas no deben diferenciarse principalmente por daño.
+Las armas y defensas no deben diferenciarse principalmente por daño bruto.
 
 Principio:
 
-> Cada arma define qué problema debe resolver el jugador para conseguir un impacto.
+> Cada sistema define qué problema debe resolver el jugador para conseguir un impacto o evitarlo.
 
-Ejemplos todavía preliminares:
+El armamento ofensivo guiado ya definido se basa en:
 
-- misiles: estimación, programación y seeker;
-- armas cinéticas: adelanto y tiempo de vuelo;
-- láseres: solución precisa, línea de visión y mantenimiento del seguimiento;
-- drones: posicionamiento, sensores, control espacial, saturación o designación.
+- **misiles:** velocidad, persecución y saturación;
+- **torpedos:** aproximación inerte, activación tardía y sorpresa.
 
-Ningún misil, defensa o arma debe ser perfecto.
+Las principales defensas ya definidas se basan en:
+
+- **interceptores:** destrucción a distancia mediante guiado por sensores defensivos;
+- **láser defensivo:** seguimiento preciso y acumulación de pulsos;
+- **defensa cinética:** densidad de fuego y gestión de munición;
+- **señuelos:** manipulación de detección, localización e identificación;
+- **Jammer:** degradación de Precision;
+- **maniobra y control de emisiones:** ruptura de soluciones y reducción de detectabilidad.
+
+No se contempla actualmente una familia de armas cinéticas ofensivas.
+
+Ningún misil, torpedo, defensa o nave debe ser perfecto.
 
 ---
 
@@ -2630,6 +2639,7 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 151. Los señuelos tienen una penalización específica a la identificación; durante la identificación parcial pueden ser clasificados aleatoriamente como distintas naves.
 152. Cuando la identificación alcanza certeza suficiente, el objeto se revela como DECOY/SEÑUELO.
 153. Mientras no haya sido correctamente identificado como señuelo, puede ser adquirido normalmente por seekers enemigos.
+154. El armamento ofensivo definido actualmente se limita a misiles y torpedos; no existe una familia de armas cinéticas ofensivas.
 
 ---
 
@@ -2687,8 +2697,6 @@ Quedan por concretar, entre otros:
 - modelos concretos de señuelos y sus firmas/Huellas energéticas simuladas;
 - velocidad inicial y características de sus lanzadores;
 - drones;
-- defensas concretas;
-- armas no misilísticas;
 - resolución detallada de daño;
 - comportamiento de IA;
 - automatización permitida;

@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.6
+**Versión:** 1.7
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -1651,27 +1651,98 @@ La fortaleza de una nave defensiva no consiste en absorber impactos, sino en red
 
 ## 15.2. Misiles interceptores
 
-Los misiles interceptores son la mejor defensa directa contra misiles enemigos.
+Los misiles interceptores son la mejor defensa directa contra misiles y torpedos enemigos.
 
-Son más pequeños que los misiles ofensivos, pero aun así ocupan mucho espacio comparados con la munición de otras contramedidas.
+Conceptualmente son misiles de pequeño tamaño diseñados específicamente para interceptar otras armas guiadas.
+
+Comparten con los misiles ofensivos las reglas generales de:
+
+- motor;
+- aceleración;
+- maniobrabilidad;
+- combustible;
+- Huella energética;
+- generación;
+- espacio interno;
+- lanzamiento;
+- vuelo por inercia cuando agotan combustible.
+
+Sin embargo, su doctrina y perfil de prestaciones son diferentes.
+
+### 15.2.1. Perfil típico
+
+Frente a un misil ofensivo comparable, un interceptor suele tener:
+
+- **menor alcance**;
+- **menor velocidad punta práctica**;
+- **mayor Maneuverability**;
+- menor carga destructiva;
+- tamaño reducido.
+
+Su objetivo no es perseguir una nave a gran distancia, sino alcanzar rápidamente una amenaza ya localizada dentro de la burbuja defensiva y ser capaz de corregir con violencia frente a un blanco pequeño y muy rápido.
+
+La alta Maneuverability es por tanto una de sus prestaciones fundamentales.
+
+### 15.2.2. Guiado externo
+
+Los interceptores no dependen de un seeker propio para localizar el blanco.
+
+Son guiados por los **sensores defensivos de la nave que los dispara**.
+
+La nave:
+
+1. detecta el misil o torpedo enemigo;
+2. estima su posición mediante el sensor defensivo;
+3. lanza el interceptor;
+4. continúa actualizando la posición estimada de la amenaza;
+5. transmite al interceptor las correcciones necesarias durante el vuelo.
+
+El interceptor depende por tanto de que la nave mantenga una localización suficientemente buena del objetivo.
+
+La posición utilizada para guiarlo es siempre la posición **estimada por el sensor defensivo**, nunca la posición real oculta del arma enemiga.
+
+### 15.2.3. Dependencia del sensor defensivo
+
+Esta dependencia es una limitación central.
+
+Si los sensores defensivos:
+
+- no detectan la amenaza;
+- la detectan demasiado tarde;
+- tienen una Precisión insuficiente;
+- quedan cegados por la actividad de la propia nave;
+- son fuertemente degradados por un Jammer;
+
+el interceptor pierde calidad de guiado o puede resultar imposible de emplear eficazmente.
+
+Esto refuerza la secuencia táctica del Jammer:
+
+- mantener el Jammer activo dificulta que el seeker enemigo consiga una solución;
+- pero también degrada los sensores defensivos propios;
+- para utilizar interceptores con eficacia puede ser necesario apagar el Jammer y recuperar una buena solución sobre la amenaza entrante.
+
+### 15.2.4. Ventajas
 
 Sus principales ventajas son:
 
-- gran eficacia;
-- capacidad para destruir amenazas cuando aún están lejos;
-- posibilidad de proteger tanto a la propia nave como a otras naves cercanas, según la configuración futura.
+- gran eficacia contra amenazas detectadas a tiempo;
+- alta capacidad de maniobra;
+- posibilidad de destruir el arma enemiga lejos de la nave protegida;
+- posibilidad de proteger tanto a la propia nave como a otras naves cercanas cuando el sensor defensivo y la geometría lo permitan.
+
+### 15.2.5. Limitaciones
 
 Sus principales limitaciones son:
 
-- necesitan que el misil enemigo haya sido detectado con suficiente antelación;
-- requieren sensores defensivos capaces de marcar la amenaza;
-- la munición es limitada;
-- cada interceptor ocupa un volumen relevante de almacenamiento;
-- una nave puede quedarse sin capacidad defensiva después de gastar sus interceptores.
+- alcance relativamente corto;
+- velocidad normalmente menor que la de los misiles ofensivos;
+- dependencia completa de los sensores defensivos;
+- necesidad de detección suficientemente temprana;
+- munición limitada;
+- volumen de almacenamiento considerable comparado con munición cinética;
+- posibilidad de agotar la reserva ante ataques de saturación.
 
-Por ello son especialmente apropiados para escoltas defensivas especializadas.
-
-La principal debilidad de esta capa no es una baja eficacia individual, sino el agotamiento de munición y la posibilidad de que una amenaza sea detectada demasiado tarde.
+La principal debilidad de esta capa no es una baja eficacia individual, sino detectar demasiado tarde, perder calidad de guiado o quedarse sin interceptores.
 
 ## 15.3. Láser defensivo
 
@@ -2216,6 +2287,9 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 121. Todo misil o torpedo dispone de generación energética propia suficiente para alimentar sus sistemas activos.
 122. Destruir una ojiva antes de su distancia mínima de armado no provoca la detonación principal.
 123. Los misiles de una misma salva no coordinan reparto de objetivos.
+124. Los interceptores son misiles defensivos de menor alcance y velocidad típica, pero mayor Maneuverability que los misiles ofensivos.
+125. Los interceptores son guiados externamente por los sensores defensivos de la nave lanzadora y dependen de la posición estimada que estos proporcionan.
+126. La degradación o pérdida de la solución del sensor defensivo degrada directamente el guiado de los interceptores.
 
 ---
 
@@ -2256,7 +2330,9 @@ Quedan por concretar, entre otros:
 - tamaños de área y Huella energética de modelos de Jammer;
 - regla de prioridad para Jammers solapados de distinta potencia;
 - tiempos de activación de dispositivos;
-- comportamiento exacto de interceptores;
+- comportamiento del interceptor cuando la nave pierde temporalmente la solución sobre el blanco;
+- cadencia de actualización y enlace de guiado de interceptores;
+- condición exacta de impacto/detonación del interceptor;
 - parámetros y arcos de láseres defensivos;
 - parámetros, cadencia y munición de defensa cinética;
 - tipos, persistencia e imitación de firma/energía de señuelos;

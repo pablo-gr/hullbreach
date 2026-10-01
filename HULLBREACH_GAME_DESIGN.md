@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.1
+**Versión:** 1.2
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -577,7 +577,7 @@ Existen al menos dos familias de sensores pasivos con funciones diferentes:
 - sensores defensivos;
 - sensores pasivos direccionales.
 
-Los sensores defensivos son ópticos. Los sensores pasivos direccionales detectan energía.
+Los sensores defensivos y los sensores pasivos direccionales detectan energía.
 
 Ninguno necesita emitir un barrido activo para funcionar.
 
@@ -597,7 +597,7 @@ La mayoría de las contramedidas necesitan sensores defensivos para poder emplea
 
 Los sensores defensivos tienen tres características principales:
 
-- **Sensibilidad:** capacidad para detectar objetos próximos mediante el sistema óptico.
+- **Sensibilidad:** capacidad para detectar objetos próximos por su huella energética.
 - **Precisión:** capacidad para localizar con exactitud el objeto detectado.
 - **Huella energética:** energía consumida por el sensor y contribución del dispositivo a la huella energética total mientras permanece activo.
 
@@ -653,7 +653,7 @@ También pueden detectar y localizar:
 - estaciones;
 - otros objetos;
 
-si estos se encuentran dentro de su corto alcance y superan el umbral de detección óptica.
+si estos se encuentran dentro de su corto alcance y superan el umbral de detección energética.
 
 Normalmente las naves enemigas no se aproximarán tanto, por lo que su uso principal sigue siendo defensivo. Pero una nave que entre en la burbuja de detección de un sensor defensivo puede ser localizada aunque la nave observadora carezca de sensores de búsqueda activos.
 
@@ -669,7 +669,7 @@ Antes del 100 % la clasificación puede ser incompleta o incorrecta.
 
 Al alcanzar el 100 % se conoce exactamente el modelo de misil.
 
-Las naves y otros objetos detectados a corto alcance siguen igualmente las reglas generales de identificación progresiva, sin aplicar por ello la penalización base propia de los sensores energéticos.
+Las naves y otros objetos detectados a corto alcance siguen igualmente las reglas generales de identificación progresiva de los sensores energéticos.
 
 La detección y la identificación son independientes de la efectividad posterior de las armas o contramedidas.
 
@@ -932,13 +932,21 @@ Cambiar a un sensor de firma puede ser una respuesta táctica válida contra una
 
 ## 12.6. Sensores defensivos
 
-Los sensores defensivos son ópticos y no pertenecen a las familias energética o de firma.
+Los sensores defensivos son energéticos y, por tanto, se ven fuertemente afectados por el Jammer.
 
-Por tanto, el Jammer no los interfiere.
+Mientras una nave mantiene activo su propio Jammer:
 
-Pueden seguir detectando y localizando misiles u otros objetos dentro de su corto alcance aunque la propia nave tenga el Jammer activo.
+- la Precisión de sus sensores defensivos queda muy degradada;
+- la identificación de amenazas progresa mucho peor;
+- puede resultar incapaz de localizar con calidad suficiente un misil entrante para habilitar sus contramedidas.
 
-Sus limitaciones siguen siendo las ya definidas por alcance, orientación y cegamiento causado por motores o sensores activos.
+Esto crea una decisión táctica deliberada.
+
+El Jammer puede impedir que un seeker enemigo consiga una solución precisa, pero si el misil consigue atravesar la interferencia y aproximarse a la nave, el jugador debe advertir la situación y apagar el Jammer a tiempo para recuperar la capacidad normal de los sensores defensivos.
+
+Un Jammer mal utilizado puede por tanto convertirse en una calamidad defensiva: protege contra la adquisición enemiga pero puede cegar la capa de sensores necesaria para disparar interceptores, láseres o defensas cinéticas.
+
+Una vez apagado el Jammer, su interferencia desaparece inmediatamente y los sensores defensivos recuperan su funcionamiento normal, sujeto a sus demás limitaciones de alcance y sectores ciegos.
 
 ## 12.7. Sensores pasivos
 
@@ -951,7 +959,7 @@ En particular:
 
 La fuente debe ser detectada mediante sensores activos.
 
-Un sensor pasivo direccional sigue estando sujeto a la interferencia del campo cuando intenta observar objetos dentro del área del Jammer, porque funcionalmente trabaja sobre energía.
+Aunque no puedan localizar la fuente del Jammer, ambos tipos de sensores pasivos energéticos sufren su interferencia cuando intentan observar objetos situados dentro del área de efecto.
 
 ## 12.8. Efecto sobre seekers
 
@@ -1022,7 +1030,8 @@ Su uso intercambia discreción por protección:
 
 - hace más difícil obtener nuevas soluciones precisas sobre los objetos protegidos;
 - protege seekers y ataques entrantes mediante degradación de sus sensores;
-- perjudica también a los sensores propios afectados;
+- perjudica también a los sensores propios afectados, incluidos los sensores defensivos;
+- puede obligar al jugador a apagarlo cuando un misil entrante se aproxima para recuperar la defensa terminal;
 - puede proteger simultáneamente a varias naves;
 - también puede proteger accidentalmente a enemigos situados dentro del área.
 
@@ -1380,9 +1389,8 @@ Protege a cualquier objeto situado dentro de esa zona, sea aliado o enemigo.
 
 Su función defensiva principal es degradar la Precisión de sensores y seekers:
 
-- penalización muy alta para sensores energéticos;
-- penalización moderada para sensores de firma;
-- sin efecto sobre sensores defensivos ópticos.
+- penalización muy alta para sensores energéticos, incluidos los sensores defensivos;
+- penalización moderada para sensores de firma.
 
 Tiene potencia fija, gran Huella energética y un área de efecto determinada por el modelo instalado.
 
@@ -1673,7 +1681,7 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 39. La identificación progresa desde objeto hasta modelo/clase exacta y no se degrada una vez alcanzada.
 40. Los sensores energéticos tienen una penalización base a la identificación respecto a los sensores de firma.
 41. La huella energética de un dispositivo existe mientras permanezca activo, salvo excepciones específicas definidas por el propio componente.
-42. Los sensores defensivos son pasivos, ópticos y omnidireccionales en principio, pero los motores ciegan su sector trasero y los sensores activos ciegan su sector delantero.
+42. Los sensores defensivos son pasivos, energéticos y omnidireccionales en principio, pero los motores ciegan su sector trasero y los sensores activos ciegan su sector delantero.
 43. La mayoría de contramedidas necesitan sensores defensivos para detectar y marcar misiles entrantes.
 44. Los sensores pasivos direccionales permiten localizar huellas energéticas sin emitir, pero solo a corta distancia, con orientación casi perfecta y bajo condiciones de muy baja firma y huella propia.
 45. Los sensores pasivos direccionales tienen Sensibilidad, Precisión y Huella energética y siguen la penalización de identificación de los sensores energéticos.
@@ -1708,12 +1716,13 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 74. El Jammer tiene potencia fija y se define principalmente por Interference, Energy footprint y Area of effect.
 75. El Jammer afecta por igual a aliados y enemigos situados dentro de su campo, incluidos los sensores de la propia nave emisora.
 76. Los campos de varios Jammers pueden solaparse, pero sus penalizaciones no se acumulan.
-77. Los sensores defensivos son ópticos y no se ven afectados por el Jammer.
+77. Los sensores defensivos son energéticos y se ven fuertemente afectados por el Jammer.
 78. Los sensores pasivos no detectan la fuente de un Jammer; para localizarla se necesitan sensores activos.
 79. El Jammer puede degradar seekers activos y hacerles perder un lock, aplicando las mismas reglas de sensor sin una tirada abstracta de éxito.
 80. El Jammer no reduce identificación ya obtenida ni altera ecos anteriores; solo degrada nuevas mediciones y progreso futuro.
 81. Todos los dispositivos pueden tener un tiempo de activación entre la orden de encendido y el inicio efectivo de su funcionamiento.
 82. Apagar el Jammer elimina inmediatamente su interferencia una vez desactivado.
+83. El jugador puede necesitar apagar el Jammer cuando los misiles se aproximan para que los sensores defensivos recuperen suficiente Precisión y puedan habilitar las contramedidas.
 
 ---
 

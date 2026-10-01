@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.5
+**Versión:** 1.6
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -1156,8 +1156,11 @@ Cada modelo tiene una capacidad interna determinada y distribuye ese espacio ent
 - seeker;
 - motor;
 - combustible;
+- generador;
 - carga explosiva;
 - electrónica y estructura necesarias.
+
+Todo sistema que consume energía necesita generación correspondiente también en misiles y torpedos.
 
 El jugador no construye un misil pieza a pieza.
 
@@ -1210,6 +1213,10 @@ El seeker no conoce continuamente la posición real del blanco.
 
 Realiza mediciones cada cierto intervalo de tiempo.
 
+El intervalo de medición es una característica propia del seeker, por ejemplo **Scan interval**.
+
+A diferencia de los sensores activos de una nave, el seeker no utiliza bandas de distancia seleccionables: observa todo el volumen contenido dentro de su cono y la distancia degrada Sensitivity y Precision de forma normal.
+
 Cada medición funciona como un barrido de sensor activo:
 
 - utiliza Sensitivity y Precision;
@@ -1232,7 +1239,18 @@ El seeker considera blancos válidos:
 
 Se asume la existencia de un sistema de **IFF** capaz de distinguir blancos amigos de no amigos.
 
-Si el seeker detecta varios blancos válidos dentro de su cono, selecciona el que se encuentre **más cerca del centro del cono**.
+La selección utiliza siempre la **posición estimada por las mediciones del propio seeker**, nunca la posición real oculta del objeto.
+
+El seeker comienza buscando dentro de una zona estrecha alrededor del eje central de su cono.
+
+Entre los blancos válidos detectados dentro de esa zona prioriza:
+
+1. proximidad al eje central;
+2. cercanía al seeker.
+
+Si no encuentra ningún blanco válido, amplía progresivamente el ángulo de búsqueda hasta alcanzar el Angle máximo de su seeker.
+
+Si aun así no encuentra ningún objetivo, no adquiere ninguno y continúa en línea recta.
 
 No existe una regla especial para señuelos: un señuelo que consiga parecer un blanco legítimo participa normalmente en esta selección.
 
@@ -1240,15 +1258,25 @@ No existe una regla especial para señuelos: un señuelo que consiga parecer un 
 
 Una vez adquirido un blanco, el seeker utiliza sus sucesivas mediciones para calcular una estimación cada vez mejor de su posición real.
 
-La guía del arma utiliza esa estimación para intentar interceptarlo.
+La guía del arma utiliza esa posición estimada como referencia.
 
-Si el seeker pierde el lock:
+Cada modelo de arma puede tener una variable de configuración de **reacquisition**.
 
-- el arma continúa hacia la última posición conocida;
+Si reacquisition está activa y el seeker pierde el lock:
+
+- el arma continúa hacia la última posición estimada;
 - el seeker sigue realizando mediciones;
-- si encuentra de nuevo un blanco válido puede reacquirirlo.
+- puede adquirir de nuevo el mismo blanco o seleccionar otro blanco válido según sus reglas normales de adquisición.
+
+Si reacquisition está desactivada:
+
+- una vez fijado un objetivo, el arma ignora los demás;
+- si pierde el lock continúa hacia la última posición estimada de ese objetivo;
+- no cambia de blanco.
 
 Si el Jammer degrada suficientemente la Precision, puede producirse esta pérdida de lock sin ninguna tirada especial de "jamming success".
+
+La conveniencia de utilizar intercepción predictiva basada en velocidad estimada frente a una persecución más simple queda pendiente de probarse en gameplay.
 
 ### 14.2.5. Autonomía
 
@@ -1329,7 +1357,7 @@ Un misil utiliza su motor desde el lanzamiento.
 
 Su seeker está activo desde el principio o se activa poco después del lanzamiento según el modelo.
 
-El posible pequeño retraso de activación inicial del seeker de algunos modelos queda todavía por concretar.
+El retraso inicial de activación del seeker, cuando exista, es fijo para ese modelo y no lo configura el jugador.
 
 Mientras dispone de combustible:
 
@@ -1461,6 +1489,23 @@ El arma debe encontrar después un blanco válido con su seeker.
 
 Misiles y torpedos utilizan lanzadores diferentes.
 
+Toda arma lanzada hereda la velocidad de la nave que la dispara.
+
+Por tanto:
+
+- un misil parte con la velocidad actual de la nave y desde ahí comienza a acelerar con su propio motor;
+- un torpedo parte con la velocidad actual de la nave más la velocidad adicional proporcionada por la catapulta electromagnética.
+
+Esto permite que la cinemática previa de la nave influya directamente en el lanzamiento.
+
+Los lanzadores tienen arcos físicos de disparo.
+
+La interfaz no obliga al jugador a micromanejar estos arcos:
+
+- una nave puede montar lanzadores orientados en direcciones complementarias para cubrir varios sectores;
+- cuando exista más de un lanzador válido, el sistema utiliza automáticamente el adecuado;
+- si ningún lanzador puede disparar hacia la dirección indicada, la nave puede orientarse automáticamente hasta disponer de un arco válido y efectuar el lanzamiento.
+
 ### 14.7.1. Lanzadores de misiles
 
 Un misil necesita un silo o lanzador desde el que pueda iniciar su propio motor.
@@ -1468,6 +1513,10 @@ Un misil necesita un silo o lanzador desde el que pueda iniciar su propio motor.
 Algunos lanzadores permiten realizar varios disparos simultáneos.
 
 Cuando el lanzador lo soporta, la interfaz permite seleccionar cuántos misiles se disparan en la salva, normalmente entre **1 y 4**.
+
+Los misiles de una misma salva no coordinan reparto de blancos.
+
+Si varios observan la misma nave como el blanco válido preferente, todos la atacarán.
 
 ### 14.7.2. Lanzadores de torpedos
 
@@ -1513,7 +1562,7 @@ Esa distancia puede depender de la potencia de su carga explosiva.
 
 La finalidad es impedir que el arma produzca una detonación peligrosa inmediatamente junto a la nave que la lanzó.
 
-El comportamiento exacto de una ojiva destruida antes de alcanzar la distancia de armado queda pendiente de concretar.
+Si el arma es destruida antes de alcanzar la distancia mínima de armado, la carga principal no detona. Puede generar restos o daños menores, pero no produce la explosión antinave completa.
 
 ### 14.8.3. Daño por detonación
 
@@ -2156,6 +2205,17 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 110. Los lanzadores determinan reload time; los de torpedos determinan además velocidad inicial, y algunos lanzadores de misiles permiten salvas normalmente de 1 a 4 armas.
 111. Los modelos de misil y torpedo tienen capacidad interna para componentes, pero son configuraciones prefabricadas y no personalizables por el jugador.
 112. Un arma fallida continúa por inercia y puede persistir como objeto lógico aunque deje de simularse como objeto 3D completo.
+113. Misiles y torpedos heredan la velocidad de la nave lanzadora; los torpedos suman además el impulso proporcionado por su catapulta.
+114. Los lanzadores tienen arcos físicos, pero la nave puede seleccionar automáticamente el lanzador adecuado o reorientarse para efectuar el disparo.
+115. La adquisición del seeker utiliza posiciones estimadas, no posiciones reales ocultas, y expande progresivamente su zona angular de búsqueda hasta su Angle máximo.
+116. La selección de blanco prioriza cercanía al eje del cono y después proximidad al seeker.
+117. Cada arma puede definir si permite reacquisition; con ella activa puede cambiar de blanco tras perder lock, y con ella desactivada permanece comprometida con el objetivo original.
+118. Scan interval es una característica del seeker.
+119. Los seekers no utilizan bandas de distancia seleccionables y observan todo su cono.
+120. El retraso inicial de seeker en misiles, cuando exista, es fijo por modelo.
+121. Todo misil o torpedo dispone de generación energética propia suficiente para alimentar sus sistemas activos.
+122. Destruir una ojiva antes de su distancia mínima de armado no provoca la detonación principal.
+123. Los misiles de una misma salva no coordinan reparto de objetivos.
 
 ---
 
@@ -2185,11 +2245,12 @@ Quedan por concretar, entre otros:
 - valores concretos de aceleración, combustible y velocidad inicial;
 - definición exacta de las bandas de activación de torpedos;
 - intervalo de medición de seekers;
-- posible retraso inicial fijo o configurable del seeker en determinados modelos de misil;
 - seekers concretos y sus perfiles de Angle, Sensitivity, Precision y Energy footprint;
 - modelos de cargas explosivas y radios efectivos de daño;
-- comportamiento de una ojiva destruida antes de alcanzar su distancia mínima de armado;
 - criterio técnico de persistencia de misiles y torpedos perdidos;
+- comportamiento final de guiado: persecución simple frente a intercepción predictiva;
+- valores y disponibilidad de la opción reacquisition por modelo;
+- arcos concretos de lanzadores y lógica de auto-orientación de la nave;
 - guerra electrónica;
 - valores concretos y fórmula de Interference de Jammers;
 - tamaños de área y Huella energética de modelos de Jammer;

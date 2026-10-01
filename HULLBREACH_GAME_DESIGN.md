@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.4
+**Versión:** 1.5
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -673,21 +673,25 @@ Las naves y otros objetos detectados a corto alcance siguen igualmente las regla
 
 La detección y la identificación son independientes de la efectividad posterior de las armas o contramedidas.
 
-### 11.1.5. Detección de barridos activos enemigos
+### 11.1.5. Detección de emisiones activas enemigas
 
-Los sensores defensivos también pueden detectar que un barrido de sensor activo enemigo ha alcanzado o está buscando la zona donde se encuentra la nave.
+Los sensores defensivos también pueden detectar que una emisión de sensor activo enemigo está alcanzando o buscando la zona donde se encuentra la nave.
+
+Esto incluye los seekers activos de misiles y torpedos.
 
 Pueden distinguir si se trata de:
 
 - un sensor de firma;
 - un sensor energético.
 
-No proporcionan ninguna otra información útil sobre el emisor:
+Cuando la emisión corresponde a un seeker que está iluminando o buscando la propia nave, puede generarse una alerta de emergencia de targeting.
 
-- no localizan su posición;
-- no proporcionan bearing;
-- no generan un eco;
-- no identifican la nave emisora.
+Esta alerta no proporciona por sí sola una solución contra el arma:
+
+- no localiza su posición;
+- no proporciona bearing;
+- no genera un eco posicional;
+- no permite disparar una contramedida hasta que el misil o torpedo sea detectado y localizado con suficiente calidad.
 
 ## 11.2. Sensores pasivos direccionales
 
@@ -1136,298 +1140,434 @@ Existen dos familias principales de armas ofensivas guiadas:
 - **misiles**;
 - **torpedos**.
 
-Ambas utilizan un seeker propio para adquirir el blanco y ambas pueden producir impactos letales. Su diferencia fundamental es la doctrina de aproximación.
+Ambas utilizan un seeker propio para adquirir el blanco y ambas pueden producir impactos letales.
 
-El misil acepta ser detectado a cambio de velocidad, capacidad de maniobra inmediata y saturación.
+La diferencia fundamental es la doctrina de aproximación:
 
-El torpedo intenta permanecer inerte y difícil de detectar durante la mayor parte de su aproximación para activarse lo más tarde posible y reducir el tiempo de reacción del defensor.
+- el misil acepta ser detectado a cambio de velocidad, persecución y saturación;
+- el torpedo intenta permanecer inerte durante la mayor parte de su recorrido para activarse tarde y atacar por sorpresa.
 
-## 14.1. Principio común: el seeker
+## 14.1. Arquitectura común
+
+Misiles y torpedos son objetos completos con componentes internos.
+
+Cada modelo tiene una capacidad interna determinada y distribuye ese espacio entre, como mínimo:
+
+- seeker;
+- motor;
+- combustible;
+- carga explosiva;
+- electrónica y estructura necesarias.
+
+El jugador no construye un misil pieza a pieza.
+
+Los modelos son prefabricados por diseño, pero internamente siguen las mismas reglas generales de espacio, energía, firma y compromiso entre prestaciones que el resto de objetos principales del juego.
+
+## 14.2. Seeker
 
 Todo misil y torpedo dispone de un **seeker**.
 
 El seeker es funcionalmente un pequeño sensor activo instalado en el arma.
 
-No conoce mágicamente la posición real del blanco. Debe detectarlo y mantener una solución utilizando las mismas ideas generales que el resto del sistema de sensores.
-
-Puede existir, como mínimo, en variantes:
+Puede ser:
 
 - de firma;
-- energéticas.
+- energético.
 
-El tipo concreto determina qué característica del objetivo intenta detectar y cómo le afectan el entorno y el Jammer.
+Hereda las reglas generales de su familia de sensor, incluidos efectos de distancia, entorno y Jammer.
 
-### 14.1.1. Características del seeker
+### 14.2.1. Características
 
 Un seeker tiene al menos:
 
-- **Angle:** ángulo de visión o apertura del volumen que puede observar;
+- **Angle:** apertura del cono de observación;
 - **Sensitivity:** capacidad para detectar un blanco;
 - **Precision:** calidad de la localización obtenida;
-- **Energy footprint:** energía consumida y huella generada mientras permanece activo.
+- **Energy footprint:** energía consumida y huella generada mientras está activo.
 
-#### Angle
+El Angle es fijo para cada modelo de seeker.
 
-Un ángulo grande:
+El cono está orientado hacia el morro del misil o torpedo.
+
+Un Angle grande:
 
 - cubre un volumen mayor;
-- tolera mejor errores en el punto hacia el que fue lanzada el arma;
-- permite adquirir un blanco que se haya desviado más respecto a la trayectoria prevista;
-- aumenta la Huella energética del seeker;
-- hace que el arma activa sea más fácil de detectar.
+- tolera mejor errores en la dirección inicial de disparo;
+- permite encontrar un objetivo más alejado del eje de vuelo;
+- produce mayor Huella energética;
+- hace el arma activa más fácil de detectar.
 
-Un ángulo estrecho:
+Un Angle pequeño:
 
-- exige una mejor solución inicial;
-- tolera peor que el blanco se encuentre fuera de la trayectoria esperada;
-- permite un seeker más discreto;
-- favorece ataques en los que se pretende retrasar al máximo la detección.
+- exige una dirección inicial más precisa;
+- tolera peor desviaciones del blanco;
+- reduce la Huella energética;
+- favorece ataques discretos.
 
-La apertura del seeker constituye por tanto un compromiso entre tolerancia al error y discreción.
+### 14.2.2. Mediciones periódicas
 
-### 14.1.2. Sensitivity y Precision
+El seeker no conoce continuamente la posición real del blanco.
 
-La Sensitivity funciona como en cualquier otro sensor.
+Realiza mediciones cada cierto intervalo de tiempo.
 
-La Precision determina la calidad con la que el seeker estima la posición del blanco una vez detectado.
+Cada medición funciona como un barrido de sensor activo:
 
-Sin embargo, la Precision suele ser menos crítica en un seeker que en un sensor de búsqueda de largo alcance.
+- utiliza Sensitivity y Precision;
+- aplica los modificadores de distancia;
+- aplica el retardo de propagación correspondiente;
+- puede verse afectada por entorno y Jammer;
+- produce una estimación imperfecta de la posición real.
 
-La razón es geométrica: el error absoluto producido por una determinada calidad de medición disminuye enormemente cuando la distancia al blanco es pequeña.
+A medida que el arma se acerca, las nuevas mediciones tienden a ser mucho más precisas en términos absolutos.
 
-Un sensor de búsqueda que observa un objetivo a millones de kilómetros necesita una Precision alta para producir una localización útil. Un seeker que ya se encuentra a cientos de metros del blanco puede obtener una posición suficientemente exacta incluso con una Precision muy baja.
+Por ello la Precision sigue siendo una característica real, pero normalmente es menos crítica en fase terminal que en sensores de búsqueda a millones de kilómetros.
 
-Por tanto, el seeker está diseñado para acercarse mucho al blanco —idealmente hasta contacto o distancia de detonación— y convertir progresivamente una medición inicialmente mediocre en una solución terminal extremadamente precisa gracias a la reducción de distancia.
+### 14.2.3. Adquisición de blancos
 
-Esto no hace irrelevante la Precision:
+El seeker considera blancos válidos:
 
-- afecta a la calidad de la adquisición cuando el seeker todavía está lejos;
-- afecta a la capacidad de mantener el lock durante la aproximación;
-- determina cuánto perjudican el Jammer y otras interferencias;
-- una Precision extremadamente degradada todavía puede provocar pérdida de seguimiento.
+- naves no amigas;
+- estaciones no amigas;
+- señuelos capaces de presentarse como un blanco válido.
 
-Distancia, geometría, entorno y Jammer degradan su funcionamiento según las reglas generales aplicables a su familia de sensor.
+Se asume la existencia de un sistema de **IFF** capaz de distinguir blancos amigos de no amigos.
 
-El Jammer no realiza una tirada especial contra el misil: degrada el seeker como degradaría cualquier otro sensor.
+Si el seeker detecta varios blancos válidos dentro de su cono, selecciona el que se encuentre **más cerca del centro del cono**.
 
-Si la Precision efectiva cae demasiado, un seeker que ya tenía el blanco localizado puede perder el lock y volver a buscar.
+No existe una regla especial para señuelos: un señuelo que consiga parecer un blanco legítimo participa normalmente en esta selección.
 
-## 14.2. Misiles
+### 14.2.4. Seguimiento
 
-Un misil ofensivo utiliza su propio motor desde el lanzamiento.
+Una vez adquirido un blanco, el seeker utiliza sus sucesivas mediciones para calcular una estimación cada vez mejor de su posición real.
 
-Su seeker está activo desde el principio o se activa poco después del lanzamiento, según el modelo.
+La guía del arma utiliza esa estimación para intentar interceptarlo.
+
+Si el seeker pierde el lock:
+
+- el arma continúa hacia la última posición conocida;
+- el seeker sigue realizando mediciones;
+- si encuentra de nuevo un blanco válido puede reacquirirlo.
+
+Si el Jammer degrada suficientemente la Precision, puede producirse esta pérdida de lock sin ninguna tirada especial de "jamming success".
+
+### 14.2.5. Autonomía
+
+Misiles y torpedos son **fire-and-forget**.
+
+Una vez lanzados:
+
+- no reciben actualizaciones de la nave;
+- no existe datalink de corrección;
+- no pueden retargetearse manualmente;
+- no puede modificarse su configuración;
+- actúan de forma completamente autónoma.
+
+Esto hace que la calidad de la dirección inicial y, especialmente en torpedos, el momento de activación sean decisiones importantes del jugador.
+
+### 14.2.6. Detección de la emisión del seeker
+
+Un seeker activo es un sensor activo.
+
+Los sensores pasivos defensivos pueden detectar que una emisión de seeker está alcanzando o buscando a la nave.
+
+Esto puede generar una **alerta de emergencia de targeting** incluso antes de que los sensores defensivos puedan localizar físicamente el misil.
+
+La alerta por sí sola:
+
+- no proporciona la posición del misil;
+- no permite disparar una contramedida contra él;
+- informa de que un seeker activo está iluminando o buscando la nave.
+
+La posición del arma solo se obtiene cuando su huella energética resulta suficientemente detectable para el sensor defensivo.
+
+## 14.3. Motor y cinemática
+
+Los motores de misiles, torpedos y naves comparten los mismos principios generales.
+
+Como mínimo tienen:
+
+- **Acceleration**;
+- **Maneuverability**;
+- **Fuel**;
+- **Energy footprint**.
+
+### 14.3.1. Acceleration
+
+La aceleración determina principalmente:
+
+- cuánto puede aumentar o reducir la velocidad el objeto;
+- cuánto combustible consume durante la propulsión principal.
+
+El consumo de combustible depende principalmente de acelerar o desacelerar.
+
+No existe una velocidad máxima artificial: mientras quede combustible y el motor siga acelerando, la velocidad puede continuar aumentando.
+
+### 14.3.2. Maneuverability
+
+La Maneuverability determina la capacidad para cambiar la dirección del vector de movimiento y orientar la trayectoria hacia el objetivo.
+
+Las maniobras de orientación y corrección lateral consumen muy poco combustible en comparación con la aceleración principal.
+
+Este principio se aplica también a los motores de las naves.
+
+Por tanto, un arma puede conocer con gran precisión dónde está un blanco y aun así fallar si no dispone de Maneuverability suficiente para modificar su trayectoria a tiempo.
+
+### 14.3.3. Fin del combustible
+
+Cuando el combustible se agota:
+
+- el motor deja de acelerar;
+- el arma deja de poder corregir activamente su trayectoria;
+- conserva su velocidad y dirección por inercia;
+- el seeker puede seguir funcionando mientras disponga de energía propia, pero ya no puede cambiar el resultado salvo que el arma estuviera casualmente encaminada hacia el blanco.
+
+En la práctica, un misil o torpedo sin combustible suele perderse en el espacio.
+
+## 14.4. Misiles
+
+Un misil utiliza su motor desde el lanzamiento.
+
+Su seeker está activo desde el principio o se activa poco después del lanzamiento según el modelo.
+
+El posible pequeño retraso de activación inicial del seeker de algunos modelos queda todavía por concretar.
 
 Mientras dispone de combustible:
 
-- continúa acelerando;
-- puede maniobrar;
-- puede corregir su trayectoria para perseguir al blanco.
+- acelera;
+- maniobra;
+- realiza mediciones con su seeker;
+- corrige su trayectoria;
+- persigue el blanco adquirido.
 
-### 14.2.1. Ventajas
+### 14.4.1. Doctrina
 
-Los misiles están diseñados para:
-
-- llegar rápidamente al enemigo;
-- adquirir blancos con alta probabilidad;
-- corregir errores de trayectoria;
-- perseguir objetivos que maniobran;
-- saturar las defensas mediante múltiples amenazas simultáneas.
-
-Su combinación de motor activo y seeker activo proporciona una capacidad de adquisición y persecución superior a la aproximación inerte de un torpedo.
-
-### 14.2.2. Inconvenientes
-
-La contrapartida es la detectabilidad.
-
-Durante buena parte o toda su aproximación:
-
-- el motor está funcionando;
-- existe una estela de propelente;
-- el seeker está emitiendo;
-- la Huella energética es elevada;
-- la firma física asociada a la propulsión es elevada.
-
-Por ello el defensor suele disponer de más tiempo para detectar el ataque y utilizar interceptores u otras contramedidas.
-
-### 14.2.3. Alcance
-
-El alcance práctico del misil está limitado principalmente por su combustible.
-
-Mientras queda combustible puede acelerar y maniobrar.
-
-Cuando se agota:
-
-- deja de poder acelerar;
-- deja de poder corregir activamente su trayectoria mediante el motor;
-- continúa desplazándose por inercia;
-- pierde gran parte de su capacidad para perseguir a un blanco que cambie de trayectoria.
-
-Esto hace que un misil tenga un alcance ofensivo menor que un torpedo comparable cuando necesita conservar capacidad de persecución hasta el final.
-
-## 14.3. Torpedos
-
-Un torpedo es un arma guiada diseñada para aproximarse inicialmente de forma inerte.
-
-No utiliza su motor principal al abandonar el lanzador.
-
-Es expulsado mediante una **catapulta electromagnética** que le proporciona una velocidad inicial.
-
-Tras el lanzamiento:
-
-- mantiene esa velocidad por inercia;
-- el motor permanece apagado;
-- el seeker permanece apagado;
-- no consume combustible de propulsión;
-- no genera Huella energética propia significativa durante la fase inerte;
-- su pequeña dimensión hace que su firma física base sea mínima.
-
-### 14.3.1. Fase inerte
-
-Durante la fase inerte el torpedo sigue una trayectoria balística a velocidad constante.
-
-No acelera ni persigue al blanco.
-
-Su principal defensa es pasar desapercibido.
-
-La velocidad inicial suele ser sensiblemente menor que la velocidad que alcanza un misil que lleva tiempo acelerando.
-
-### 14.3.2. Activación
-
-Transcurrido el tiempo de activación configurado o definido para el arma:
-
-- se enciende el seeker;
-- se enciende el motor;
-- comienza a consumir combustible;
-- empieza a acelerar y maniobrar;
-- intenta detectar y adquirir un blanco válido.
-
-A partir de ese momento el torpedo se comporta como un arma guiada activa y su detectabilidad aumenta drásticamente.
-
-### 14.3.3. Ventajas
-
-El torpedo está diseñado para:
-
-- aproximarse durante mucho tiempo con una detectabilidad mínima;
-- conservar combustible durante la mayor parte de la trayectoria;
-- alcanzar objetivos situados a mayor distancia;
-- reducir al mínimo el tiempo entre su detección y el impacto;
-- atacar por sorpresa.
-
-Su mayor alcance no procede necesariamente de llevar más combustible, sino de no consumirlo durante la fase inerte.
-
-### 14.3.4. Inconvenientes
-
-Durante la fase inerte:
-
-- no puede corregir su trayectoria;
-- no puede perseguir un blanco;
-- depende mucho más de que la solución de lanzamiento inicial sea buena;
-- un cambio importante de trayectoria del objetivo puede dejarlo mal colocado para la adquisición final.
-
-Además, su velocidad de aproximación inicial suele ser menor que la de un misil activo.
-
-La decisión crítica consiste en elegir cuándo activarlo.
-
-Una activación temprana facilita la adquisición y la corrección de trayectoria, pero revela antes el torpedo y proporciona más tiempo al defensor.
-
-Una activación tardía maximiza la sorpresa, pero aumenta el riesgo de que el blanco quede fuera del volumen de búsqueda del seeker.
-
-## 14.4. Doctrina ofensiva
-
-### Misil
-
-Principio:
+El misil busca:
 
 > velocidad + persecución + saturación.
 
-El atacante asume que el arma probablemente será detectada.
+El atacante asume que será detectado y trata de superar la defensa mediante:
 
-Busca compensarlo mediante:
-
-- alta velocidad;
+- velocidad alta;
 - adquisición temprana;
-- corrección continua;
-- múltiples armas simultáneas;
-- presión sobre la munición de interceptores y defensas terminales.
+- correcciones continuas;
+- varios misiles simultáneos;
+- presión sobre interceptores y defensas terminales.
 
-### Torpedo
+### 14.4.2. Detectabilidad
 
-Principio:
+Durante su vuelo activo contribuyen a su detectabilidad:
+
+- firma física base del cuerpo;
+- firma producida por la estela del motor;
+- Huella energética del motor;
+- Huella energética del seeker;
+- cualquier otro dispositivo activo instalado.
+
+Los componentes de un misil siguen exactamente la misma regla de Huella energética que cualquier otro dispositivo del juego.
+
+### 14.4.3. Alcance
+
+Su alcance útil está limitado por el combustible necesario para continuar acelerando y perseguir un blanco.
+
+Un misil puede viajar mucho más lejos por inercia después de agotar combustible, pero deja de ser una amenaza guiada efectiva salvo coincidencia de trayectoria.
+
+## 14.5. Torpedos
+
+Un torpedo se lanza inicialmente inerte mediante una **catapulta electromagnética**.
+
+La catapulta determina la velocidad inicial de lanzamiento.
+
+Diferentes modelos de lanzador de torpedos pueden proporcionar diferentes velocidades iniciales.
+
+### 14.5.1. Fase inerte
+
+Durante la fase inerte:
+
+- el torpedo conserva la velocidad inicial por inercia;
+- mantiene la dirección y orientación de lanzamiento;
+- el motor permanece apagado;
+- el seeker permanece apagado;
+- no recibe correcciones ni actualizaciones;
+- no consume combustible de propulsión;
+- su Huella energética propia es prácticamente nula;
+- su firma física base es extremadamente pequeña por su reducido tamaño.
+
+Un torpedo inerte es por tanto muy difícil de detectar.
+
+Un sensor de firma extraordinariamente sensible podría detectarlo a corta distancia, pero en condiciones normales la detección antes de la activación es muy improbable.
+
+### 14.5.2. Programación de activación
+
+Antes del lanzamiento el jugador selecciona una **banda de distancia de activación**:
+
+- corta;
+- media;
+- larga;
+- extrema.
+
+La banda representa la distancia recorrida desde el lanzamiento antes de activar el arma.
+
+Como la velocidad proporcionada por la catapulta es conocida, el sistema puede convertir internamente esa distancia en el tiempo de vuelo correspondiente.
+
+Cuando alcanza la distancia programada:
+
+- se activa el seeker;
+- se activa el motor;
+- comienza a consumir combustible;
+- empieza a acelerar y maniobrar;
+- intenta adquirir un blanco válido.
+
+Una activación temprana proporciona más tiempo para buscar y corregir.
+
+Una activación tardía maximiza la sorpresa pero aumenta el riesgo de que el blanco ya no se encuentre dentro del cono del seeker.
+
+### 14.5.3. Doctrina
+
+El torpedo busca:
 
 > aproximación silenciosa + activación tardía + sorpresa.
 
-El atacante intenta que el torpedo recorra la mayor parte posible de la distancia sin ser detectado.
+Su mayor alcance práctico procede de conservar el combustible durante la fase inerte.
 
-El momento ideal de activación es suficientemente próximo para reducir mucho el tiempo de reacción del defensor, pero suficientemente lejano para permitir que el seeker encuentre el blanco y que el motor corrija la trayectoria.
+Normalmente es más lento durante la aproximación inicial que un misil que lleva tiempo acelerando, pero puede acercarse mucho antes de producir una firma y Huella energética importantes.
 
-## 14.5. Motor
+## 14.6. Interfaz de disparo
 
-Misiles y torpedos disponen de un motor con características propias.
+La interfaz evita cálculos manuales complejos.
 
-Como mínimo determina:
+### Misil
 
-- **Acceleration:** capacidad de acelerar y maniobrar;
-- **Fuel:** cantidad de combustible disponible;
-- **Energy footprint:** consumo y huella del sistema mientras está funcionando.
+El jugador:
 
-El combustible determina cuánto tiempo puede mantenerse la propulsión activa.
+1. selecciona el modelo de misil;
+2. selecciona, si el lanzador lo permite, cuántos misiles disparará simultáneamente;
+3. hace clic en la pantalla para indicar la **dirección inicial de disparo**;
+4. dispara.
 
-El motor de un misil funciona desde el lanzamiento.
+### Torpedo
 
-El motor de un torpedo permanece apagado durante la fase inerte y comienza a consumir combustible únicamente cuando el arma se activa.
+El jugador:
 
-La propulsión activa también genera firma física mediante la estela de propelente según las reglas generales de firma.
+1. selecciona el modelo de torpedo;
+2. selecciona la banda de activación: corta, media, larga o extrema;
+3. hace clic en la pantalla para indicar la **dirección inicial de disparo**;
+4. dispara.
 
-## 14.6. Carga explosiva
+El jugador no introduce manualmente coordenadas, velocidades ni soluciones matemáticas de interceptación.
+
+El arma debe encontrar después un blanco válido con su seeker.
+
+## 14.7. Lanzadores
+
+Misiles y torpedos utilizan lanzadores diferentes.
+
+### 14.7.1. Lanzadores de misiles
+
+Un misil necesita un silo o lanzador desde el que pueda iniciar su propio motor.
+
+Algunos lanzadores permiten realizar varios disparos simultáneos.
+
+Cuando el lanzador lo soporta, la interfaz permite seleccionar cuántos misiles se disparan en la salva, normalmente entre **1 y 4**.
+
+### 14.7.2. Lanzadores de torpedos
+
+Los torpedos necesitan una catapulta electromagnética.
+
+La catapulta determina la velocidad inicial de salida.
+
+### 14.7.3. Recarga
+
+El **reload time** es una característica del lanzador, no del misil o torpedo.
+
+Diferentes lanzadores pueden por tanto:
+
+- recargar a velocidades distintas;
+- permitir salvas de tamaños diferentes;
+- en el caso de torpedos, proporcionar velocidades iniciales distintas.
+
+## 14.8. Carga explosiva y detonación
 
 Misiles y torpedos llevan una carga explosiva.
 
-La carga determina principalmente el volumen alrededor de la detonación en el que puede producirse daño significativo.
+La carga determina:
 
-Principios:
+- potencia de la explosión;
+- distancia a la que esa explosión puede producir daño significativo.
 
-- un impacto directo de un arma antinave suele ser letal o producir un mission kill;
-- no es imprescindible un impacto geométricamente perfecto para causar daño;
-- una detonación cercana puede causar daños graves;
-- la gravedad del daño cercano depende de la potencia de la carga, la distancia y el blindaje de la nave.
+La explosión se considera omnidireccional.
 
-Los detalles exactos de fragmentación, sobrepresión u otros mecanismos de daño se resolverán dentro del sistema de daño.
+### 14.8.1. Condiciones de detonación
 
-### 14.6.1. Diferencia habitual entre misiles y torpedos
+Por defecto, la ojiva detona:
 
-Los misiles suelen dedicar una proporción mayor de su volumen a:
+- al entrar en contacto con el blanco;
+- cuando una defensa destruye el misil o torpedo después de estar armado.
 
-- combustible;
-- motor;
-- capacidad de persecución.
+No existe por ahora una espoleta de proximidad estándar.
 
-Por ello suelen transportar una carga explosiva menor.
+### 14.8.2. Distancia mínima de armado
 
-Los torpedos pueden dedicar una proporción mayor de su volumen a la carga explosiva al no necesitar gastar combustible durante toda la aproximación.
+Cada arma tiene una distancia mínima de armado.
 
-Esto no constituye una regla absoluta para todos los modelos, pero sí una tendencia de diseño de ambas familias.
+Esa distancia puede depender de la potencia de su carga explosiva.
 
-## 14.7. Flujo de ataque
+La finalidad es impedir que el arma produzca una detonación peligrosa inmediatamente junto a la nave que la lanzó.
 
-El arma nunca recibe mágicamente la posición real del enemigo.
+El comportamiento exacto de una ojiva destruida antes de alcanzar la distancia de armado queda pendiente de concretar.
 
-El jugador lanza utilizando la información que realmente posee.
+### 14.8.3. Daño por detonación
 
-De forma conceptual:
+Un impacto directo de un arma antinave suele ser letal o producir un mission kill.
 
-1. obtiene uno o varios ecos;
-2. estima la posición y movimiento del blanco;
-3. selecciona misil o torpedo;
-4. elige el punto o solución de lanzamiento;
-5. configura las opciones disponibles del seeker y, en el caso del torpedo, su activación;
-6. lanza el arma;
-7. el arma sigue su comportamiento de aproximación;
-8. cuando el seeker está activo intenta detectar un blanco dentro de su volumen de búsqueda;
-9. si lo adquiere, intenta mantener la solución y perseguirlo;
-10. si no encuentra un blanco válido o pierde la solución sin recuperarla, el ataque puede fallar.
+Una detonación cercana también puede causar daños graves.
 
-La calidad del lanzamiento inicial sigue siendo responsabilidad del jugador.
+Para resolverla son suficientes, a nivel del arma:
+
+- potencia de la carga;
+- distancia entre la explosión y la nave.
+
+El daño disminuye fuertemente con la distancia.
+
+El blindaje puede resultar importante frente a una explosión suficientemente lejana, aunque no debe salvar una nave de una detonación directa de gran potencia.
+
+### 14.8.4. Destrucción por contramedidas
+
+Destruir un misil no hace desaparecer mágicamente su carga.
+
+Si una defensa destruye un misil o torpedo armado:
+
+- la ojiva detona;
+- la explosión se produce en el punto de destrucción.
+
+Por tanto, una defensa terminal puede destruir correctamente el arma y aun así permitir daños si la intercepción ocurre demasiado cerca.
+
+La distancia de intercepción es especialmente importante frente a torpedos o armas con cargas explosivas grandes.
+
+## 14.9. IFF, señuelos y fuego amigo
+
+El seeker utiliza IFF para excluir blancos amigos.
+
+Entre todos los blancos no amigos que detecta selecciona el más próximo al centro del cono.
+
+Un señuelo diseñado para parecer un blanco legítimo puede ser seleccionado exactamente igual que una nave o estación real.
+
+No existe una excepción especial de "probabilidad de caer en el señuelo": el engaño emerge del funcionamiento normal del seeker.
+
+## 14.10. Persistencia de armas perdidas
+
+A nivel de lore, un misil o torpedo que falla no desaparece.
+
+Continúa desplazándose por el espacio según su posición, dirección y velocidad.
+
+A nivel técnico no es necesario conservar indefinidamente el objeto 3D completo.
+
+Cuando se aleje suficientemente del escenario activo puede:
+
+- descargarse de la simulación detallada;
+- desaparecer de la escena;
+- conservarse únicamente como un registro ligero con posición, dirección, velocidad y demás datos necesarios.
+
+El criterio exacto de persistencia y eliminación se decidirá durante el diseño técnico.
 
 ---
 
@@ -1685,6 +1825,8 @@ La nave más protegida no es la que acumula más resistencia estructural, sino l
 
 La maniobra no está pensada principalmente para esquivar físicamente un misil mediante reflejos.
 
+Los motores tienen, entre otras propiedades, **Acceleration** y **Maneuverability**. La aceleración es el principal origen del consumo de combustible, mientras que los cambios de orientación y correcciones de maniobra son comparativamente baratos.
+
 Sirve para:
 
 - orientar sensores;
@@ -1872,14 +2014,23 @@ No debe mostrarse una posición real oculta ni una correlación automática inex
 
 ## 24.3. Interfaz de disparo
 
-Flujo objetivo:
+El disparo de armas guiadas se mantiene deliberadamente simple.
 
-1. seleccionar eco/zona;
-2. seleccionar misil;
-3. ajustar seeker;
-4. ajustar condición de activación;
-5. hacer clic sobre el punto de espacio deseado;
-6. disparar.
+Para un misil:
+
+1. seleccionar el modelo de misil;
+2. seleccionar el número de misiles de la salva cuando el lanzador permita varios disparos simultáneos;
+3. hacer clic en la pantalla para indicar la dirección inicial;
+4. disparar.
+
+Para un torpedo:
+
+1. seleccionar el modelo de torpedo;
+2. seleccionar la banda de activación: corta, media, larga o extrema;
+3. hacer clic en la pantalla para indicar la dirección inicial;
+4. disparar.
+
+El seeker, su Angle y el resto de prestaciones pertenecen al modelo del arma y no se ajustan manualmente durante cada disparo.
 
 ## 24.4. Interfaz defensiva
 
@@ -1980,7 +2131,7 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 85. Todo misil o torpedo utiliza un seeker que funciona como un pequeño sensor activo y puede ser de firma o de energía.
 86. El Angle del seeker intercambia tolerancia al error por Huella energética y detectabilidad.
 87. Los misiles utilizan motor desde el lanzamiento y buscan velocidad, persecución y saturación.
-88. Los torpedos son lanzados inertes mediante catapulta electromagnética y no activan motor ni seeker hasta pasado su tiempo de activación.
+88. Los torpedos son lanzados inertes mediante catapulta electromagnética y no activan motor ni seeker hasta alcanzar la banda de distancia de activación programada.
 89. Un torpedo inerte conserva velocidad por inercia, consume prácticamente cero energía propia y presenta una firma mínima por su pequeño tamaño.
 90. El alcance útil de un arma guiada depende de su combustible disponible para acelerar, maniobrar y perseguir; una vez agotado sigue por inercia pero pierde capacidad de persecución.
 91. Los torpedos suelen conseguir mayor alcance porque conservan combustible durante la fase inerte.
@@ -1988,6 +2139,23 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 93. Un impacto directo antinave suele ser letal, pero una detonación cercana también puede causar daños graves según carga, distancia y blindaje.
 94. La Precision de un seeker existe y funciona como en cualquier sensor, pero suele ser menos crítica en fase terminal porque el error absoluto disminuye fuertemente al reducirse la distancia al blanco.
 95. Los seekers pueden ser de firma o de energía y heredan las interacciones ambientales y de Jammer de su familia de sensor.
+96. Los seekers realizan mediciones periódicas con las mismas reglas básicas de barrido y propagación que los sensores activos.
+97. El seeker usa IFF para excluir amigos y, entre los blancos válidos, selecciona el más cercano al centro de su cono.
+98. Misiles y torpedos son fire-and-forget: después del lanzamiento no reciben datalink, correcciones ni retargeting manual.
+99. Si un seeker pierde el lock, el arma continúa hacia la última posición conocida mientras intenta reacquirir un blanco válido.
+100. Los motores tienen una característica Maneuverability independiente de Acceleration; maniobrar consume muy poco combustible comparado con acelerar o desacelerar.
+101. No existe velocidad máxima artificial: un objeto puede seguir acelerando mientras disponga de combustible.
+102. Los torpedos conservan dirección y orientación durante su fase inerte.
+103. La velocidad inicial de un torpedo depende de su catapulta electromagnética.
+104. Los sensores defensivos pueden detectar la emisión de un seeker que está buscando la nave y generar una alerta de targeting sin conocer todavía la posición del arma.
+105. Un torpedo inerte tiene una firma tan pequeña que detectarlo antes de activarse requiere normalmente condiciones excepcionales y un sensor de firma muy sensible a corta distancia.
+106. Los componentes de misiles y torpedos contribuyen a firma y Huella energética mediante las mismas reglas que cualquier otro dispositivo.
+107. La ojiva detona por contacto o cuando el arma es destruida después de estar armada; no existe por defecto espoleta de proximidad.
+108. Destruir una ojiva armada demasiado cerca puede seguir causando daños graves; la distancia de intercepción y el blindaje importan.
+109. Cada arma tiene una distancia mínima de armado relacionada con la seguridad de la nave lanzadora y potencialmente con la potencia de la carga.
+110. Los lanzadores determinan reload time; los de torpedos determinan además velocidad inicial, y algunos lanzadores de misiles permiten salvas normalmente de 1 a 4 armas.
+111. Los modelos de misil y torpedo tienen capacidad interna para componentes, pero son configuraciones prefabricadas y no personalizables por el jugador.
+112. Un arma fallida continúa por inercia y puede persistir como objeto lógico aunque deje de simularse como objeto 3D completo.
 
 ---
 
@@ -2015,9 +2183,13 @@ Quedan por concretar, entre otros:
 - duración, persistencia y magnitud exacta de la firma producida por estelas de propelente;
 - tiempos de viaje y cinemática de misiles y torpedos;
 - valores concretos de aceleración, combustible y velocidad inicial;
-- tiempos y reglas concretas de activación de torpedos;
+- definición exacta de las bandas de activación de torpedos;
+- intervalo de medición de seekers;
+- posible retraso inicial fijo o configurable del seeker en determinados modelos de misil;
 - seekers concretos y sus perfiles de Angle, Sensitivity, Precision y Energy footprint;
 - modelos de cargas explosivas y radios efectivos de daño;
+- comportamiento de una ojiva destruida antes de alcanzar su distancia mínima de armado;
+- criterio técnico de persistencia de misiles y torpedos perdidos;
 - guerra electrónica;
 - valores concretos y fórmula de Interference de Jammers;
 - tamaños de área y Huella energética de modelos de Jammer;
@@ -2027,7 +2199,6 @@ Quedan por concretar, entre otros:
 - parámetros y arcos de láseres defensivos;
 - parámetros, cadencia y munición de defensa cinética;
 - tipos, persistencia e imitación de firma/energía de señuelos;
-- enlaces de datos;
 - drones;
 - defensas concretas;
 - armas no misilísticas;

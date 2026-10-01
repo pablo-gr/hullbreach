@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.9
+**Versión:** 1.10
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -1954,33 +1954,101 @@ Sin embargo, un láser defensivo suele ser poco potente frente a blindaje naval 
 
 ## 15.4. Defensa cinética
 
-La defensa cinética es también una defensa de última hora.
+La defensa cinética es también una defensa de última hora y funciona de forma muy similar al láser defensivo.
 
-Es más efectiva que el láser defensivo, pero consume munición.
+Depende de los sensores defensivos para:
 
-Tiene dos modos de disparo.
+- localizar la amenaza;
+- mantener una solución estimada;
+- orientar el arma;
+- seguir el blanco durante el ataque.
 
-### 15.4.1. Modo bajo
+Comparte además las reglas generales de:
+
+- arco físico de tiro;
+- Tracking speed / Mobility;
+- Activation delay;
+- selección manual de objetivos;
+- cola de objetivos;
+- posibilidad de atacar naves cercanas detectadas por sensores defensivos.
+
+Su diferencia principal es que utiliza proyectiles físicos y munición limitada.
+
+### 15.4.1. Huella energética
+
+La defensa cinética tiene una Huella energética activa claramente inferior a la de un láser defensivo.
+
+Mientras permanece encendida consume energía, pero su contribución a la detectabilidad energética es relativamente moderada.
+
+Disparar apenas aumenta su Huella energética.
+
+Por tanto no necesita una diferencia grande entre estado preparado y estado de fuego como ocurre con el láser.
+
+Esto la convierte en una defensa terminal menos penalizante desde el punto de vista energético, a cambio de depender de munición finita.
+
+### 15.4.2. Munición
+
+La munición de la defensa cinética es limitada.
+
+Cada ráfaga consume proyectiles del almacén asignado al arma.
+
+Una nave puede por tanto agotar por completo esta capa defensiva durante un combate prolongado o ante ataques de saturación.
+
+El consumo depende principalmente del modo de disparo seleccionado.
+
+### 15.4.3. Modos de disparo
+
+La defensa cinética tiene al menos dos modos de disparo.
+
+Los modos afectan principalmente a:
+
+- **probabilidad de impacto**;
+- **consumo de munición**.
+
+No modifican significativamente la Huella energética.
+
+#### Modo bajo
 
 El modo bajo:
 
+- utiliza menos proyectiles por intento;
 - consume munición lentamente;
-- permite mantener la defensa activa durante más tiempo;
-- ofrece una eficacia similar o solo moderadamente superior a la del láser.
+- proporciona una probabilidad de impacto menor;
+- permite mantener la defensa operativa durante más tiempo.
 
-Está pensado para conservar munición cuando la amenaza no justifica el máximo consumo.
+Está pensado para conservar munición cuando la amenaza permite asumir un riesgo mayor de fallo.
 
-### 15.4.2. Modo alto
+#### Modo alto
 
 El modo alto:
 
-- utiliza una cadencia de fuego muy elevada;
-- puede destruir misiles con gran eficacia;
-- consume la munición extremadamente rápido.
+- utiliza una cadencia o densidad de fuego mucho mayor;
+- incrementa de forma importante la probabilidad de impacto;
+- consume munición extremadamente rápido.
 
-Durante un periodo corto puede convertirse en una defensa antimisil muy potente, pero una salva prolongada o varias oleadas pueden vaciar rápidamente sus reservas.
+Está pensado para maximizar la supervivencia inmediata cuando una amenaza es crítica.
 
-La elección de modo permite al jugador intercambiar conservación de munición por capacidad inmediata de supervivencia.
+### 15.4.4. Resolución del ataque
+
+El arma apunta utilizando la posición estimada por los sensores defensivos.
+
+La probabilidad de impacto depende de la calidad de esa solución y del modo de disparo.
+
+Una mala Precision, un Jammer, una alta velocidad angular del blanco o una Tracking speed insuficiente pueden reducir la eficacia.
+
+El modo alto compensa parte de estas dificultades aumentando la densidad de fuego, pero no corrige una solución completamente inútil.
+
+La fórmula exacta de probabilidad de impacto se definirá durante la implementación de bajo nivel.
+
+### 15.4.5. Uso contra naves
+
+La defensa cinética puede disparar contra naves cercanas detectadas por los sensores defensivos.
+
+Sin embargo está optimizada para destruir misiles y torpedos frágiles.
+
+Contra una nave blindada, sus proyectiles suelen tener una capacidad de penetración y daño muy limitada.
+
+No sustituye al armamento ofensivo dedicado.
 
 ## 15.5. Señuelos
 
@@ -2461,6 +2529,12 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 138. Un emisor láser solo puede atacar un objetivo cada vez; el jugador puede crear una cola manual y se respeta el orden de selección.
 139. El láser debe mantener seguimiento durante cada pulso y un error de Precision puede hacer que falle.
 140. Destruir con láser un arma activa y armada puede detonar su ojiva; destruir un torpedo todavía inerte no provoca la explosión antinave principal.
+141. La defensa cinética comparte guiado, Tracking speed/Mobility, Activation delay, arco de tiro y cola manual de objetivos con el láser defensivo.
+142. La defensa cinética tiene una Huella energética activa menor que el láser y disparar apenas incrementa esa Huella.
+143. La munición cinética es limitada.
+144. La defensa cinética tiene modos de fuego que intercambian consumo de munición por probabilidad de impacto.
+145. El modo alto aumenta mucho la densidad de fuego y la probabilidad de impacto, pero consume munición extremadamente rápido.
+146. El modo bajo conserva munición a cambio de una probabilidad de impacto menor.
 
 ---
 
@@ -2509,7 +2583,10 @@ Quedan por concretar, entre otros:
 - valores de Tracking speed/Mobility;
 - huellas Active y Firing;
 - Activation delay y arcos concretos de láseres defensivos;
-- parámetros, cadencia y munición de defensa cinética;
+- fórmula exacta de probabilidad de impacto de defensa cinética;
+- consumo concreto de munición por modo;
+- cadencia/densidad de fuego de cada modo;
+- valores de Tracking speed/Mobility y Activation delay de defensas cinéticas;
 - tipos, persistencia e imitación de firma/energía de señuelos;
 - drones;
 - defensas concretas;

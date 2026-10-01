@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.10
+**Versión:** 1.11
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -2056,27 +2056,109 @@ Los señuelos son objetos físicos reales lanzados por la nave.
 
 No generan simplemente un eco ficticio en la interfaz.
 
-El jugador los utiliza de forma similar a un misil:
+A diferencia de interceptores, láseres y defensas cinéticas, **no dependen en absoluto de los sensores defensivos**.
 
-1. selecciona un punto del espacio;
-2. configura una distancia o condición de activación;
-3. lanza el señuelo;
-4. el señuelo viaja hasta la posición programada;
-5. al activarse comienza a simular las características de una nave.
+Una vez lanzados son objetos autónomos.
 
-Una vez activo, el señuelo debe ser especialmente difícil de identificar correctamente.
+### 15.5.1. Lanzamiento y trayectoria
 
-Los sensores pueden detectarlo como un objeto real y comenzar su proceso normal de identificación.
+El jugador los lanza de forma muy parecida a un torpedo:
 
-Durante ese proceso puede parecer:
+1. selecciona el señuelo;
+2. selecciona una banda de distancia de activación;
+3. hace clic en la pantalla para indicar la dirección de lanzamiento;
+4. lanza el señuelo.
 
-- un objeto desconocido;
-- una nave;
-- un tipo de nave plausible.
+El señuelo recibe una velocidad inicial y continúa desplazándose por inercia.
 
-Solo al alcanzar suficiente identificación puede descubrirse que en realidad es un señuelo.
+No dispone de motor principal.
 
-### 15.5.1. Uso táctico
+Durante todo su vuelo:
+
+- mantiene velocidad constante salvo efectos externos;
+- conserva su trayectoria inicial;
+- no acelera;
+- no maniobra;
+- no recibe correcciones;
+- no depende de sensores defensivos ni de ninguna solución de tiro.
+
+Al alcanzar la distancia programada se activa.
+
+### 15.5.2. Estado inerte
+
+Antes de activarse el señuelo es físicamente un objeto aproximadamente del tamaño de un misil.
+
+Su firma y Huella energética reales son por tanto pequeñas mientras permanece inerte.
+
+No pretende engañar al enemigo durante esta fase.
+
+### 15.5.3. Imitación de nave
+
+Al activarse comienza a emitir una combinación artificial de:
+
+- firma física;
+- Huella energética;
+
+diseñada para parecer compatible con una **nave indeterminada**.
+
+El señuelo no puede configurarse para imitar una nave concreta, una clase concreta ni un modelo concreto.
+
+Su objetivo es conseguir que el sensor enemigo concluya inicialmente que está observando una nave real sin poder establecer correctamente cuál.
+
+Aunque físicamente tenga aproximadamente el tamaño de un misil, las emisiones y características simuladas hacen que sus mediciones puedan resultar compatibles con un objetivo naval mucho mayor.
+
+### 15.5.4. Penalización de localización
+
+Los señuelos están diseñados para resultar más difíciles de localizar exactamente que una nave real.
+
+Cuando un sensor obtiene mediciones sobre un señuelo activo, su **Precision efectiva recibe una penalización adicional**.
+
+Por tanto:
+
+- puede ser relativamente fácil detectar que existe algo;
+- puede resultar considerablemente más difícil establecer su posición exacta;
+- los ecos obtenidos pueden mostrar una dispersión mayor que la producida por una nave real en las mismas condiciones.
+
+Esta penalización se suma a las demás fuentes normales de error, como distancia, geometría, entorno y Jammer.
+
+### 15.5.5. Identificación
+
+Un señuelo activo es deliberadamente más difícil de identificar correctamente que una nave real.
+
+El proceso sigue utilizando las reglas generales de identificación progresiva, pero con una penalización específica del señuelo.
+
+Durante las fases intermedias de identificación el sensor puede clasificarlo erróneamente como **cualquier nave compatible elegida al azar**.
+
+Esta identificación provisional:
+
+- puede cambiar con nuevas mediciones;
+- no representa una identidad real subyacente;
+- no implica que el señuelo esté imitando conscientemente ese modelo.
+
+El señuelo nunca imita deliberadamente una nave concreta.
+
+Cuando el proceso de identificación alcanza certeza suficiente, la clasificación correcta se revela como:
+
+**DECOY / SEÑUELO**
+
+A partir de ese momento deja de considerarse una nave real para efectos de interpretación e identificación.
+
+### 15.5.6. Interacción con seekers
+
+Mientras no haya sido identificado correctamente como señuelo, puede ser considerado un blanco válido por seekers enemigos exactamente igual que una nave real.
+
+No existe una tirada especial de "engaño de señuelo".
+
+El seeker aplica sus reglas normales:
+
+- detecta objetos;
+- utiliza su posición estimada;
+- evalúa blancos válidos;
+- selecciona según sus reglas de adquisición.
+
+Si el señuelo ocupa una posición favorable respecto al cono del seeker, puede ser adquirido en lugar de la nave real.
+
+### 15.5.7. Uso táctico
 
 Los señuelos no sirven únicamente para defenderse de un misil ya lanzado.
 
@@ -2088,13 +2170,12 @@ Ejemplos:
 - provocar un barrido activo enemigo;
 - atraer una patrulla;
 - hacer gastar misiles;
+- desviar seekers;
 - saturar la interpretación de ecos;
 - preparar una emboscada;
 - simular una aproximación o retirada.
 
 Conceptualmente equivalen a lanzar una distracción en un juego de sigilo: su valor depende mucho de dónde y cuándo se utilicen.
-
-El diseño detallado de qué firma y huella pueden imitar, cuánto dura el engaño y cómo interactúan con seekers se definirá en el apartado específico de contramedidas.
 
 ## 15.6. Configuraciones civiles y paramilitares
 
@@ -2375,6 +2456,13 @@ Para un torpedo:
 3. hacer clic en la pantalla para indicar la dirección inicial;
 4. disparar.
 
+Para un señuelo:
+
+1. seleccionar el modelo de señuelo;
+2. seleccionar la banda de activación;
+3. hacer clic en la pantalla para indicar la dirección inicial;
+4. lanzar.
+
 El seeker, su Angle y el resto de prestaciones pertenecen al modelo del arma y no se ajustan manualmente durante cada disparo.
 
 ## 24.4. Interfaz defensiva
@@ -2446,7 +2534,7 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 55. Los misiles interceptores son la contramedida directa más eficaz, pero necesitan detección temprana y tienen munición voluminosa y limitada.
 56. El láser defensivo tiene munición infinita y ahorra espacio de almacenamiento, pero es una defensa terminal menos eficaz y aumenta mucho la huella energética mientras está activo.
 57. La defensa cinética es más eficaz que el láser a corta distancia y tiene modos de fuego bajo y alto que intercambian eficacia por consumo de munición.
-58. Los señuelos son objetos físicos lanzables a una posición y condición de activación; pueden parecer naves hasta que la identificación suficiente revela que son señuelos.
+58. Los señuelos son objetos físicos autónomos lanzados en una dirección y programados para activarse tras recorrer una banda de distancia; pueden parecer naves hasta que la identificación suficiente revela que son señuelos.
 59. Los señuelos pueden utilizarse tanto defensivamente como para engaño táctico, distracción y preparación de emboscadas.
 60. Maniobra, apagado de sistemas y apagado del motor principal forman parte de la defensa indirecta mediante control de firma y huella.
 61. La distancia degrada tanto la Sensibilidad como la Precisión de los sensores.
@@ -2535,6 +2623,13 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 144. La defensa cinética tiene modos de fuego que intercambian consumo de munición por probabilidad de impacto.
 145. El modo alto aumenta mucho la densidad de fuego y la probabilidad de impacto, pero consume munición extremadamente rápido.
 146. El modo bajo conserva munición a cambio de una probabilidad de impacto menor.
+147. Los señuelos no dependen de sensores defensivos y funcionan de forma completamente autónoma después del lanzamiento.
+148. Los señuelos no tienen motor principal: mantienen por inercia su velocidad y trayectoria iniciales hasta y después de activarse.
+149. Al activarse, un señuelo imita firma física y Huella energética compatibles con una nave indeterminada, pero no puede imitar deliberadamente una clase o modelo concreto.
+150. Los sensores sufren una penalización adicional de Precision al localizar un señuelo activo.
+151. Los señuelos tienen una penalización específica a la identificación; durante la identificación parcial pueden ser clasificados aleatoriamente como distintas naves.
+152. Cuando la identificación alcanza certeza suficiente, el objeto se revela como DECOY/SEÑUELO.
+153. Mientras no haya sido correctamente identificado como señuelo, puede ser adquirido normalmente por seekers enemigos.
 
 ---
 
@@ -2587,7 +2682,10 @@ Quedan por concretar, entre otros:
 - consumo concreto de munición por modo;
 - cadencia/densidad de fuego de cada modo;
 - valores de Tracking speed/Mobility y Activation delay de defensas cinéticas;
-- tipos, persistencia e imitación de firma/energía de señuelos;
+- valores concretos de penalización de Precision e identificación de señuelos;
+- duración/autonomía de la imitación activa del señuelo;
+- modelos concretos de señuelos y sus firmas/Huellas energéticas simuladas;
+- velocidad inicial y características de sus lanzadores;
 - drones;
 - defensas concretas;
 - armas no misilísticas;

@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.13
+**Versión:** 1.14
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -2313,16 +2313,17 @@ Toda fuente capaz de dañar una nave utiliza como mínimo:
 
 - **Damage:** severidad del daño producido después de penetrar;
 - **Penetration:** capacidad para atravesar blindaje;
-- **Area of effect:** radio dentro del cual puede afectar a más de un punto o compartimento;
-- **Breach:** capacidad para producir perforaciones, abrir el casco y provocar pérdida de atmósfera.
+- **Area of effect:** radio dentro del cual puede afectar a más de un punto o compartimento.
 
-Breach es necesario para diferenciar efectos físicamente distintos.
+No existe una característica separada de Breach.
+
+La capacidad para abrir una brecha en el casco emerge de la misma interacción entre Penetration, Armor y Damage que resuelve el resto del impacto.
 
 Por ejemplo:
 
-- un láser defensivo puede tener Damage suficiente para destruir componentes internos después de penetrar, pero Breach relativamente bajo;
-- una defensa cinética puede tener Penetration y Breach altos aunque su Damage total sea menor;
-- un misil o torpedo tiene Damage, Penetration, Breach y Area of effect muy altos.
+- un láser defensivo tiene Penetration muy baja: contra una nave civil sin blindaje puede penetrar, dañar componentes y abrir brechas, pero incluso una cantidad moderada de blindaje reduce drásticamente su capacidad de afectar al interior;
+- una defensa cinética tiene Penetration muy alta y por ello puede perforar el casco incluso contra blindajes elevados;
+- un misil o torpedo tiene Damage y Penetration extremadamente altos, además de Area of effect.
 
 ## 18.2. Armas puntuales y explosiones
 
@@ -2507,43 +2508,74 @@ Si el compartimento queda destruido, sus componentes se consideran destruidos sa
 
 ## 18.8. Brechas y descompresión
 
-Penetrar blindaje no implica automáticamente la misma pérdida de aire para todas las armas.
+Una brecha no se resuelve mediante una estadística independiente.
 
-Después de penetrar, la propiedad **Breach** determina la gravedad de la perforación producida en el casco.
+Primero se resuelve normalmente el impacto:
 
-La combinación de:
+1. Penetration efectiva frente a Armor;
+2. Damage transferido al interior;
+3. severidad local sobre el compartimento.
 
-- Breach;
-- Damage local;
-- estado estructural del compartimento;
+Si el ataque no penetra el blindaje, no abre una brecha interna.
 
-determina la fuga resultante.
+Si penetra, la probabilidad y gravedad de la brecha dependen principalmente de:
 
-Las brechas pueden clasificarse conceptualmente como:
+- cuánto ha superado la Penetration al Armor;
+- cuánto Damage local ha llegado al compartimento;
+- estado estructural resultante del compartimento.
 
-- **leve:** pérdida lenta de presión;
-- **grave:** pérdida rápida de presión;
-- **catastrófica:** el compartimento se abre al vacío o queda estructuralmente destruido.
+Conceptualmente:
 
-Un láser suele tener Breach bajo.
+- penetración marginal + Damage bajo -> puede no abrir brecha o producir una fuga pequeña;
+- penetración clara + Damage moderado -> brecha importante;
+- penetración muy superior al blindaje + Damage alto -> brecha grave o catastrófica;
+- compartimento destruido -> pérdida total de estanqueidad.
 
-Puede:
+Esto produce de forma natural las diferencias entre armas.
 
-- penetrar;
-- calentar o destruir componentes;
-- herir o matar tripulación en el punto afectado;
+### Láser defensivo
 
-sin abrir necesariamente un agujero grande.
+El láser tiene Penetration muy baja.
 
-La defensa cinética tiene normalmente:
+Contra una nave con Armor = 0 puede:
 
-- alta Penetration;
-- Damage comparativamente menor;
-- Breach alto.
+- penetrar el casco;
+- dañar componentes;
+- matar tripulación en la zona afectada;
+- abrir una brecha.
 
-Por tanto puede perforar fácilmente un casco ligero, destruir un componente en su trayectoria y provocar una descompresión peligrosa aunque no transfiera una enorme cantidad de Damage global.
+Con un blindaje ligero, gran parte de su capacidad de penetración y Damage transferido desaparece.
 
-Los misiles y torpedos tienen Breach muy alto.
+Con blindaje suficiente puede dejar de producir cualquier daño interno.
+
+Por tanto su baja capacidad para causar descompresión no procede de una regla especial, sino de su Penetration limitada.
+
+### Defensa cinética
+
+La defensa cinética tiene Penetration muy alta.
+
+Puede atravesar con facilidad incluso blindajes elevados.
+
+Su Damage total es menor que el de un misil, pero una perforación cinética puede:
+
+- atravesar el casco;
+- dañar o destruir un componente;
+- matar tripulación en su trayectoria;
+- abrir una brecha y provocar pérdida de presión.
+
+Esto la hace peligrosa contra naves a corta distancia pese a ser un arma defensiva.
+
+### Misiles y torpedos
+
+Los misiles y torpedos combinan Penetration y Damage extremadamente altos.
+
+Un impacto directo produce normalmente:
+
+- penetración catastrófica;
+- destrucción local;
+- múltiples brechas;
+- pérdida rápida de presión;
+- daño sobre varios compartimentos debido al Area of effect.
 
 ## 18.9. Atmósfera por compartimentos
 
@@ -2672,7 +2704,6 @@ La diferencia entre mission kill, abandono, derelicto y destrucción física pod
 
 - Damage extremadamente alto;
 - Penetration extremadamente alta;
-- Breach extremadamente alto;
 - Area of effect mayor que 0;
 - un impacto directo no puede ser detenido por blindaje;
 - incluso una detonación cercana puede afectar a varios compartimentos.
@@ -2681,18 +2712,18 @@ La diferencia entre mission kill, abandono, derelicto y destrucción física pod
 
 - Area of effect = 0;
 - Damage/Heat local relevante;
-- Penetration limitada frente a blindaje naval;
-- Breach bajo;
-- puede ser peligroso para naves poco blindadas y componentes internos si consigue penetrar;
-- provoca menos descompresión que un penetrador cinético comparable.
+- Penetration muy baja;
+- puede ser peligroso contra naves sin blindaje o muy poco blindadas;
+- incluso un blindaje moderado reduce fuertemente su capacidad de causar daño interno;
+- con suficiente blindaje puede resultar incapaz de penetrar y causar cualquier daño interno.
 
 ### Defensa cinética contra naves
 
 - Area of effect = 0;
-- Penetration alta;
-- Breach alto;
+- Penetration muy alta;
 - Damage menor que el de un arma explosiva;
-- puede atravesar blindaje ligero, dañar componentes y abrir brechas con facilidad;
+- puede atravesar incluso blindajes elevados;
+- puede dañar componentes y abrir brechas con facilidad una vez penetrado el casco;
 - es peligrosa a corta distancia pese a no estar diseñada como arma ofensiva principal.
 
 ## 18.16. Principio general
@@ -3034,12 +3065,12 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 153. Mientras no haya sido correctamente identificado como señuelo, puede ser adquirido normalmente por seekers enemigos.
 154. El armamento ofensivo definido actualmente se limita a misiles y torpedos; no existe una familia de armas cinéticas ofensivas.
 155. Las naves no tienen HP globales; el daño se resuelve localmente sobre compartimentos, componentes, tripulación y atmósfera.
-156. Las fuentes de daño se caracterizan como mínimo por Damage, Penetration, Area of effect y Breach.
+156. Las fuentes de daño se caracterizan como mínimo por Damage, Penetration y Area of effect.
 157. Si Penetration no supera Armor no se transfiere Damage; entre penetración marginal y amplia el Damage transferido aumenta progresivamente hasta el 100 %.
 158. Ningún blindaje puede detener completamente un impacto directo de un misil o torpedo antinave.
 159. Los compartimentos y componentes usan estados discretos como Intacto/Operativo, Dañado y Destruido, no barras de HP globales.
 160. Cada compartimento mantiene su propia atmósfera y puede aislarse mediante mamparos estancos.
-161. Breach determina la capacidad de un ataque penetrante para provocar pérdida de presión; láseres suelen tener Breach bajo, cinéticas defensivas alto y misiles/torpedos muy alto.
+161. Las brechas emergen de Penetration frente a Armor, Damage transferido y estado estructural; no existe una estadística separada de Breach.
 162. El control de daños repara automáticamente componentes dañados cuando existe tripulación y condiciones habitables, pero no puede reparar componentes destruidos.
 163. Las brechas leves pueden contenerse durante combate; las graves o catastróficas requieren aislar el compartimento.
 164. Mission kill y pérdida total emergen de capacidades perdidas, tripulación, presión y destrucción local, no de un umbral de HP.
@@ -3103,7 +3134,7 @@ Quedan por concretar, entre otros:
 - curva exacta de falloff de Damage y Penetration en explosiones;
 - valores de resistencia estructural de compartimentos y Resistance de componentes;
 - tablas o fórmulas de probabilidad de estado Dañado/Destruido;
-- valores y fórmula exacta de Breach y fuga de atmósfera;
+- fórmula exacta que convierte Penetration excedente, Damage local y daño estructural en gravedad de brecha y fuga de atmósfera;
 - modelo de Pressure/Air y propagación entre compartimentos conectados;
 - reglas exactas de bajas por impacto y descompresión;
 - velocidad y requisitos del control de daños;

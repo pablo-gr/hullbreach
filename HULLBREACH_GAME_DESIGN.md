@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.14
+**Versión:** 1.15
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -2301,411 +2301,481 @@ Ningún misil, torpedo, defensa o nave debe ser perfecto.
 
 Hullbreach no utiliza puntos de vida globales para las naves.
 
-El daño se resuelve localmente sobre la estructura física de la nave:
+El daño se resuelve localmente:
 
-> impacto o explosión -> blindaje -> penetración -> compartimentos -> componentes / tripulación / atmósfera -> capacidades operativas.
+> impacto o explosión -> distancia / Area of effect -> Penetration + Damage -> Armor -> compartimento -> componentes / tripulación / atmósfera -> capacidades operativas.
 
-Una nave queda fuera de combate o se pierde como consecuencia de lo que ha dejado de funcionar, de la muerte de su tripulación y de la pérdida de presión, no porque una barra de HP llegue a cero.
+Una nave queda fuera de combate o se pierde por las consecuencias físicas y funcionales del daño, no porque una barra de HP llegue a cero.
 
 ## 18.1. Propiedades básicas de una fuente de daño
 
 Toda fuente capaz de dañar una nave utiliza como mínimo:
 
-- **Damage:** severidad del daño producido después de penetrar;
+- **Damage:** severidad potencial del daño después de penetrar;
 - **Penetration:** capacidad para atravesar blindaje;
-- **Area of effect:** radio dentro del cual puede afectar a más de un punto o compartimento.
+- **Area of effect:** radio dentro del cual el ataque puede afectar a varios puntos o compartimentos.
 
 No existe una característica separada de Breach.
 
-La capacidad para abrir una brecha en el casco emerge de la misma interacción entre Penetration, Armor y Damage que resuelve el resto del impacto.
-
-Por ejemplo:
-
-- un láser defensivo tiene Penetration muy baja: contra una nave civil sin blindaje puede penetrar, dañar componentes y abrir brechas, pero incluso una cantidad moderada de blindaje reduce drásticamente su capacidad de afectar al interior;
-- una defensa cinética tiene Penetration muy alta y por ello puede perforar el casco incluso contra blindajes elevados;
-- un misil o torpedo tiene Damage y Penetration extremadamente altos, además de Area of effect.
+La capacidad de abrir una brecha emerge de Penetration, Damage y del estado estructural resultante.
 
 ## 18.2. Armas puntuales y explosiones
 
 Para un ataque con **Area of effect = 0**:
 
 - solo se resuelve el punto donde impacta;
-- solo el compartimento alcanzado directamente recibe el evento de daño;
+- solo el compartimento alcanzado directamente recibe el evento principal de daño;
 - láseres y proyectiles cinéticos defensivos utilizados contra una nave funcionan de esta forma.
 
 Para un ataque explosivo con **Area of effect > 0**:
 
 - la explosión puede afectar a varios compartimentos;
 - Damage y Penetration disminuyen con la distancia al centro de la explosión;
-- el radio de Area of effect determina hasta dónde puede existir un efecto significativo.
+- cada compartimento se resuelve de forma independiente.
 
-La función exacta de caída se ajustará durante implementación, pero debe cumplir:
+Como modelo inicial puede utilizarse una caída lineal:
 
-- distancia 0 -> Damage y Penetration máximos;
-- distancia igual al Area of effect -> efecto 0;
-- caída continua y fuerte con la distancia.
-
-Conceptualmente:
-
-`factor = falloff(distance / area_of_effect)`
+`factor = clamp(1 - distance / area_of_effect, 0, 1)`
 
 `effective_damage = Damage * factor`
 
 `effective_penetration = Penetration * factor`
 
-La misma explosión puede por tanto destruir un compartimento cercano, dañar otro más alejado y no conseguir penetrar el blindaje de un tercero.
+La curva definitiva podrá sustituirse durante balance si una caída distinta produce mejores resultados.
 
-## 18.3. Qué compartimentos alcanza una explosión
+Debe mantenerse siempre:
 
-Cada compartimento tiene una posición y volumen físicos o una representación espacial equivalente.
+- distancia 0 -> efecto máximo;
+- distancia igual o superior al Area of effect -> efecto 0;
+- cuanto más lejos esté un compartimento, menor Damage y Penetration recibe.
+
+## 18.3. Compartimentos afectados por una explosión
+
+Cada compartimento tiene una posición y un volumen físico o una representación espacial equivalente.
 
 Una explosión consulta qué compartimentos entran dentro de su Area of effect.
 
-Para cada uno se calcula:
+Para cada uno se calcula independientemente:
 
-- distancia desde la explosión al volumen del compartimento;
+- distancia a la explosión;
 - Damage efectivo;
 - Penetration efectiva;
-- blindaje exterior que debe atravesarse;
-- mamparos o barreras internas relevantes entre la explosión y ese compartimento.
+- Armor exterior encontrado;
+- barreras internas relevantes cuando proceda.
 
-Esto permite que una explosión grande alcance varios compartimentos sin aplicar automáticamente el mismo daño a todos.
+Por tanto una misma explosión puede:
 
-Los compartimentos más próximos y más expuestos reciben el efecto más fuerte.
+- destruir completamente un compartimento próximo;
+- dañar uno intermedio;
+- no penetrar otro más lejano.
 
-## 18.4. Penetración y transferencia de daño
+Una explosión no aplica un único valor de daño a toda la nave.
 
-El blindaje no funciona como puntos de vida.
+## 18.4. Penetración y transferencia de Damage
 
-Se compara la Penetration efectiva del ataque con el blindaje efectivo encontrado en la trayectoria.
+El blindaje no tiene HP.
 
-Regla base:
+Se compara la Penetration efectiva con el Armor encontrado.
 
-- si `Penetration <= Armor`: el ataque no penetra y el Damage transferido es 0;
-- si Penetration supera Armor por poco: solo se transfiere una fracción del Damage;
-- si Penetration supera ampliamente Armor: se transfiere todo el Damage.
-
-Como fórmula inicial:
-
-`penetration_ratio = Penetration / Armor`
-
-Si `penetration_ratio <= 1`:
-
-`damage_transfer = 0`
-
-Entre 1 y 2:
-
-`damage_transfer = penetration_ratio - 1`
-
-A partir de 2:
+Si `Armor <= 0`:
 
 `damage_transfer = 1`
+
+Si `Armor > 0`:
+
+`penetration_ratio = effective_penetration / Armor`
+
+Regla inicial:
+
+- `penetration_ratio <= 1` -> `damage_transfer = 0`;
+- entre 1 y 2 -> `damage_transfer = penetration_ratio - 1`;
+- `penetration_ratio >= 2` -> `damage_transfer = 1`.
 
 Finalmente:
 
 `local_damage = effective_damage * damage_transfer`
 
-Por tanto:
+Ejemplos:
 
-- 1,1 veces el blindaje -> aproximadamente 10 % del Damage;
-- 1,5 veces -> aproximadamente 50 %;
-- 2 veces o más -> 100 %.
+- Penetration = 0,9 × Armor -> 0 % del Damage;
+- Penetration = 1,1 × Armor -> aproximadamente 10 %;
+- Penetration = 1,5 × Armor -> aproximadamente 50 %;
+- Penetration >= 2 × Armor -> 100 %.
 
-El umbral de 2 es un valor de diseño inicial y puede ajustarse tras probar el sistema.
+El valor 2 × Armor es un umbral inicial de balance y podrá ajustarse tras pruebas.
 
-## 18.5. Impactos directos de misiles y torpedos
+## 18.5. Severity
 
-Un impacto directo de un misil o torpedo antinave constituye una excepción deliberada a la posibilidad de que el blindaje detenga completamente el ataque.
+Después de resolver Penetration y Armor, el Damage local no se resta de una barra.
 
-**Ningún blindaje instalable debe poder detener un impacto directo ni siquiera del misil antinave más débil del juego.**
+Se utiliza para calcular la **Severity** del evento respecto al elemento afectado:
 
-Un impacto directo:
+`severity = local_damage / Resistance`
 
-- garantiza penetración catastrófica del compartimento alcanzado;
-- puede destruir completamente ese compartimento;
-- puede destruir todos o casi todos los componentes contenidos;
-- puede matar a toda la tripulación presente;
-- genera además su explosión normal y aplica Area of effect sobre compartimentos cercanos;
-- tiene una probabilidad muy alta de provocar descompresión extensa o general.
+La misma relación se utiliza para:
 
-El blindaje sigue siendo importante frente a:
+- estructura del compartimento;
+- componentes;
+- otros elementos físicos que posteriormente necesiten resolver daño.
 
-- detonaciones cercanas;
-- zonas periféricas del Area of effect;
-- láseres defensivos;
-- fuego cinético defensivo;
-- fragmentos y daño secundario.
+Cada elemento utiliza su propia Resistance.
 
-## 18.6. Estado de los compartimentos
+## 18.6. Daño estructural de compartimentos
 
-Los compartimentos no tienen una barra de HP global.
+Cada compartimento tiene:
 
-Cada compartimento tiene un estado estructural discreto, como mínimo:
+- **Structural Resistance**;
+- estado estructural.
 
-- **Intacto**;
-- **Dañado**;
-- **Destruido**.
+Estados mínimos:
 
-Un evento de daño local compara `local_damage` con la resistencia estructural del compartimento y obtiene una probabilidad de:
+- **INTACT**;
+- **DAMAGED**;
+- **DESTROYED**.
 
-- permanecer funcional;
-- quedar dañado;
-- quedar destruido.
+La Severity estructural es:
 
-La fórmula exacta se calibrará durante implementación.
+`structural_severity = local_damage / structural_resistance`
 
-Un compartimento destruido representa una pérdida estructural local catastrófica:
+Como tabla inicial de balance:
+
+| Severity | Intacto | Dañado | Destruido |
+| ---: | ---: | ---: | ---: |
+| < 0,25 | 95 % | 5 % | 0 % |
+| 0,25–0,50 | 70 % | 30 % | 0 % |
+| 0,50–1,00 | 25 % | 70 % | 5 % |
+| 1,00–1,50 | 0 % | 75 % | 25 % |
+| 1,50–2,00 | 0 % | 40 % | 60 % |
+| 2,00–3,00 | 0 % | 10 % | 90 % |
+| > 3,00 | 0 % | 0 % | 100 % |
+
+Estos porcentajes son valores iniciales para pruebas y balance.
+
+Un compartimento **DAMAGED** sigue existiendo y puede mantener parte de su funcionalidad, pero ha sufrido daño estructural relevante y puede tener brechas o componentes dañados.
+
+Un compartimento **DESTROYED** representa una pérdida estructural local catastrófica:
 
 - queda inhabitable;
-- pierde su estanqueidad;
-- su atmósfera se pierde;
-- la tripulación presente muere o queda prácticamente condenada;
-- los componentes alojados en él son destruidos o quedan inutilizables.
+- pierde toda estanqueidad;
+- su Pressure cae a 0 o prácticamente 0;
+- la tripulación presente muere o queda prácticamente eliminada;
+- los componentes alojados se consideran destruidos;
+- no puede repararse durante el combate.
 
-La destrucción de un compartimento **no destruye automáticamente toda la nave**. Si el compartimento puede aislarse, el resto del casco puede sobrevivir. Esto es necesario para que la compartimentación y los mamparos estancos tengan utilidad real.
+La destrucción de un compartimento no destruye automáticamente toda la nave.
+
+La compartimentación y los mamparos estancos pueden permitir que el resto sobreviva.
 
 Sin embargo, destruir un compartimento crítico puede producir inmediatamente un mission kill.
 
-## 18.7. Componentes
+## 18.7. Impacto directo de misiles y torpedos
 
-Cada componente pertenece físicamente a un compartimento.
+Un impacto directo de un misil o torpedo antinave constituye una excepción deliberada a la posibilidad de detener el ataque mediante Armor.
 
-Los componentes tampoco utilizan una barra de HP continua como mecanismo principal.
+**Ningún blindaje instalable puede detener completamente un impacto directo ni siquiera del misil antinave más débil del juego.**
 
-Tienen estados como mínimo:
+El compartimento directamente alcanzado se considera **DESTROYED**.
 
-- **Operativo**;
-- **Dañado**;
-- **Destruido**.
+Después se resuelve normalmente la explosión del arma sobre todos los compartimentos dentro de su Area of effect.
 
-Cada componente puede tener una característica de **Resistance** o robustez.
+Por tanto un impacto directo puede producir simultáneamente:
 
-Cuando su compartimento recibe un evento de daño que ha penetrado, cada componente afectado resuelve una probabilidad de quedar:
+- compartimento impactado destruido;
+- componentes y tripulación de ese compartimento eliminados;
+- varios compartimentos vecinos dañados o destruidos;
+- varias brechas;
+- una descompresión extensa o general.
 
-- sin daños;
-- dañado;
-- destruido.
+La diferencia entre misiles pequeños y grandes emerge de:
 
-La probabilidad depende de:
+- Damage;
+- Penetration;
+- Area of effect.
 
-- Damage local;
-- Resistance del componente;
-- naturaleza y posición del impacto cuando sea relevante.
+El Armor sigue siendo muy importante frente a detonaciones cercanas y partes periféricas de la explosión.
 
-Un componente dañado:
+## 18.8. Componentes
+
+Cada componente está físicamente alojado en un compartimento.
+
+Los componentes no tienen HP continuos.
+
+Estados mínimos:
+
+- **OPERATIONAL**;
+- **DAMAGED**;
+- **DESTROYED**.
+
+Cada componente tiene una **Resistance**.
+
+Cuando un compartimento recibe Damage penetrante, los componentes afectados calculan:
+
+`component_severity = local_damage / component_resistance`
+
+Puede utilizarse inicialmente la misma curva de probabilidades que para la estructura del compartimento.
+
+Esto permite resultados como:
+
+- compartimento todavía utilizable;
+- generador destruido;
+- sensor dañado;
+- otro componente intacto.
+
+Un componente **DAMAGED**:
 
 - sigue existiendo;
-- puede sufrir reducción de rendimiento o quedar temporalmente inutilizado según su tipo;
+- puede tener rendimiento reducido o quedar temporalmente fuera de servicio según su tipo;
 - puede ser reparado por control de daños.
 
-Un componente destruido:
+Un componente **DESTROYED**:
 
 - deja de funcionar;
 - no puede repararse durante el combate;
-- necesita sustitución o reparación mayor fuera de combate.
+- requiere reparación mayor o sustitución fuera de combate.
 
-Si el compartimento queda destruido, sus componentes se consideran destruidos salvo excepciones futuras muy específicas.
+Si el compartimento queda DESTROYED, sus componentes se consideran DESTROYED.
 
-## 18.8. Brechas y descompresión
+## 18.9. Brechas
 
-Una brecha no se resuelve mediante una estadística independiente.
+Una brecha no tiene una estadística de arma independiente.
 
-Primero se resuelve normalmente el impacto:
+Solo puede producirse después de una penetración.
 
-1. Penetration efectiva frente a Armor;
-2. Damage transferido al interior;
-3. severidad local sobre el compartimento.
+Su gravedad deriva de:
 
-Si el ataque no penetra el blindaje, no abre una brecha interna.
+- margen de Penetration sobre Armor;
+- local_damage;
+- resultado estructural del compartimento.
 
-Si penetra, la probabilidad y gravedad de la brecha dependen principalmente de:
+Modelo conceptual:
 
-- cuánto ha superado la Penetration al Armor;
-- cuánto Damage local ha llegado al compartimento;
-- estado estructural resultante del compartimento.
-
-Conceptualmente:
-
-- penetración marginal + Damage bajo -> puede no abrir brecha o producir una fuga pequeña;
+- penetración marginal + Damage bajo -> ninguna brecha o fuga pequeña;
 - penetración clara + Damage moderado -> brecha importante;
-- penetración muy superior al blindaje + Damage alto -> brecha grave o catastrófica;
-- compartimento destruido -> pérdida total de estanqueidad.
+- Penetration muy superior al Armor + Damage alto -> brecha grave o catastrófica;
+- compartimento DESTROYED -> pérdida total de estanqueidad.
 
-Esto produce de forma natural las diferencias entre armas.
+La fórmula exacta se definirá durante implementación.
 
 ### Láser defensivo
 
 El láser tiene Penetration muy baja.
 
-Contra una nave con Armor = 0 puede:
+Contra Armor = 0 puede:
 
-- penetrar el casco;
+- penetrar;
 - dañar componentes;
-- matar tripulación en la zona afectada;
+- herir o matar tripulación;
 - abrir una brecha.
 
-Con un blindaje ligero, gran parte de su capacidad de penetración y Damage transferido desaparece.
+Con blindaje ligero su Damage transferido disminuye rápidamente.
 
-Con blindaje suficiente puede dejar de producir cualquier daño interno.
-
-Por tanto su baja capacidad para causar descompresión no procede de una regla especial, sino de su Penetration limitada.
+Con suficiente blindaje no produce Damage interno ni brecha.
 
 ### Defensa cinética
 
 La defensa cinética tiene Penetration muy alta.
 
-Puede atravesar con facilidad incluso blindajes elevados.
+Puede atravesar incluso blindajes elevados.
 
-Su Damage total es menor que el de un misil, pero una perforación cinética puede:
+Tiene menos Damage que un misil, pero una perforación puede:
 
-- atravesar el casco;
 - dañar o destruir un componente;
 - matar tripulación en su trayectoria;
-- abrir una brecha y provocar pérdida de presión.
-
-Esto la hace peligrosa contra naves a corta distancia pese a ser un arma defensiva.
+- abrir una brecha;
+- provocar descompresión.
 
 ### Misiles y torpedos
 
-Los misiles y torpedos combinan Penetration y Damage extremadamente altos.
+Combinan Penetration y Damage extremadamente altos.
 
-Un impacto directo produce normalmente:
+Un impacto directo destruye el compartimento alcanzado y su Area of effect puede provocar múltiples brechas adicionales.
 
-- penetración catastrófica;
-- destrucción local;
-- múltiples brechas;
-- pérdida rápida de presión;
-- daño sobre varios compartimentos debido al Area of effect.
+## 18.10. Atmósfera por compartimentos
 
-## 18.9. Atmósfera por compartimentos
+Cada compartimento presurizado mantiene su propia **Pressure/Air**.
 
-Cada compartimento presurizado conserva su propia atmósfera.
+Pressure es una magnitud continua porque representa cantidad de atmósfera, no resistencia estructural.
 
-La atmósfera puede representarse mediante un valor de **Pressure/Air** independiente de los HP estructurales.
+Conceptualmente:
 
-Los mamparos y puertas permiten aislar compartimentos.
+`Pressure = 0..100 %`
 
-Un compartimento correctamente cerrado puede permanecer presurizado aunque otro compartimento cercano se haya abierto al vacío.
+Cada brecha genera una **Leak Rate**.
 
-Una brecha reduce Pressure según:
+Como modelo inicial:
 
-- gravedad de la brecha;
-- volumen del compartimento;
-- capacidad del soporte vital para compensar pérdidas.
+- **minor breach:** pérdida lenta;
+- **major breach:** pérdida rápida;
+- **catastrophic breach:** descompresión prácticamente inmediata.
 
-Una brecha leve puede tardar en vaciar el compartimento.
+Los valores exactos se ajustarán durante implementación.
 
-Una brecha grave puede reducir la presión con rapidez.
+## 18.11. Soporte vital
 
-Una brecha catastrófica produce una descompresión casi inmediata.
+El soporte vital tiene capacidad para mantener o recuperar atmósfera.
 
-Si puertas o mamparos permanecen abiertos, la pérdida puede propagarse a compartimentos conectados.
+Conceptualmente aporta una capacidad de **Air Recovery**.
 
-## 18.10. Soporte vital
+La pérdida neta de presión puede modelarse como:
 
-El soporte vital:
+`net_pressure_loss = leak_rate - life_support_recovery`
 
-- mantiene condiciones habitables;
-- puede compensar pérdidas pequeñas de aire;
-- puede recuperar presión en un compartimento sellado cuando exista capacidad suficiente;
-- no puede compensar indefinidamente una brecha grande.
+Si el soporte vital iguala o supera una fuga pequeña, puede mantener el compartimento.
 
-Destruir el soporte vital no vacía instantáneamente la nave.
+No puede compensar indefinidamente una fuga grande.
 
-Los compartimentos conservan el aire que ya contienen, pero:
+Destruir el soporte vital no elimina instantáneamente el aire existente.
 
-- dejan de poder mantenerlo o recuperarlo correctamente;
-- una fuga se vuelve mucho más peligrosa;
-- a largo plazo la tripulación pierde condiciones habitables incluso sin una brecha nueva.
+Los compartimentos conservan su Pressure actual, pero:
 
-## 18.11. Tripulación y descompresión
+- ya no pueden compensar fugas;
+- no pueden recuperar normalmente presión perdida;
+- las condiciones habitables se degradan con el tiempo.
 
-La tripulación puede sufrir bajas por dos mecanismos independientes:
+## 18.12. Mamparos y propagación de presión
 
-- daño directo del impacto o explosión;
-- pérdida de presión.
+Cada conexión entre compartimentos tiene un estado físico, como mínimo:
 
-Mientras un compartimento conserve presión suficiente, la tripulación superviviente puede seguir operando y realizando control de daños.
+- **OPEN**;
+- **CLOSED**;
+- **DESTROYED**.
 
-Cuando la presión cae:
+Si el mamparo está CLOSED:
 
-- aumenta el riesgo de incapacitación y muerte;
-- una descompresión rápida tiene una probabilidad muy alta de matar a la tripulación presente;
-- un compartimento completamente descomprimido se considera normalmente inhabitable.
+- la atmósfera queda aislada;
+- una fuga en un compartimento no vacía automáticamente el vecino.
 
-La fórmula exacta de supervivencia dependerá de la velocidad de descompresión y del tiempo disponible para escapar o aislar la zona.
+Si está OPEN o DESTROYED:
 
-## 18.12. Control de daños
+- las presiones de los compartimentos conectados tienden a igualarse;
+- una brecha al vacío puede terminar despresurizando varios compartimentos.
+
+Cerrar mamparos a tiempo puede salvar gran parte de una nave incluso después de perder completamente un compartimento.
+
+## 18.13. Tripulación
+
+La tripulación puede sufrir bajas por:
+
+- Damage directo;
+- pérdida de Pressure.
+
+No se resuelve necesariamente individuo por individuo.
+
+El evento produce una proporción de bajas sobre la tripulación presente en el compartimento.
+
+Como modelo inicial, la Severity estructural puede utilizarse también como referencia para bajas:
+
+| Severity aproximada | Consecuencia típica |
+| ---: | --- |
+| < 0,25 | pocas o ninguna baja |
+| 0,25–0,50 | bajas ligeras |
+| 0,50–1,00 | bajas importantes |
+| 1,00–1,50 | muchas bajas |
+| 1,50–2,00 | mayoría muerta o incapacitada |
+| > 2,00 | supervivencia excepcional |
+| compartimento DESTROYED | tripulación prácticamente eliminada |
+
+Los porcentajes exactos se resolverán durante balance.
+
+La descompresión produce bajas de forma independiente:
+
+- una caída lenta de Pressure puede permitir supervivencia o evacuación;
+- una descompresión rápida tiene una probabilidad muy alta de matar o incapacitar;
+- un compartimento completamente despresurizado se considera normalmente inhabitable.
+
+## 18.14. Control de daños
 
 El control de daños es principalmente automático.
 
 Si un compartimento:
 
 - conserva tripulación viva;
-- sigue siendo accesible y suficientemente habitable;
+- sigue siendo accesible;
+- conserva condiciones suficientes para trabajar;
 
-su tripulación intenta reparar automáticamente los componentes **Dañados**.
+la tripulación intenta reparar automáticamente daños reparables.
 
-Los componentes **Destruidos** no pueden repararse durante el combate.
+### Componentes
 
-Las reparaciones pueden requerir tiempo y, más adelante, recursos o repuestos según el diseño económico definitivo.
+Puede repararse durante combate:
 
-### 18.12.1. Sellado de brechas
+`DAMAGED -> OPERATIONAL`
 
-Una brecha pequeña puede ser reparada o contenida durante el combate si:
+No puede repararse durante combate:
 
-- la pérdida de presión sigue siendo limitada;
-- todavía existe tripulación capaz de trabajar en el compartimento;
-- el compartimento no ha quedado destruido.
+`DESTROYED`
 
-Las brechas graves o catastróficas no pueden repararse normalmente durante el combate.
+La velocidad de reparación puede depender posteriormente de:
 
-La respuesta correcta es aislar el compartimento mediante mamparos estancos.
+- número de tripulantes disponibles;
+- experiencia;
+- gravedad de la avería;
+- repuestos.
 
-Un compartimento completamente descomprimido o destruido no puede ser recuperado durante el combate salvo que se introduzca posteriormente equipamiento especializado.
+### Brechas
 
-## 18.13. Mission kill
+Una brecha pequeña puede repararse o contenerse durante el combate si:
 
-No existe un porcentaje global de integridad que determine si una nave puede combatir.
+- la pérdida de Pressure es limitada;
+- todavía existe tripulación capaz de trabajar;
+- el compartimento no está destruido.
 
-El estado emerge de las capacidades que siguen disponibles.
+Las brechas graves o catastróficas no se reparan normalmente durante combate.
 
-Una nave puede quedar fuera de combate por perder uno o dos compartimentos clave aunque el resto del casco permanezca relativamente intacto.
+La respuesta es aislar el compartimento cerrando mamparos.
 
-Ejemplos:
+Un compartimento completamente descomprimido o DESTROYED no se recupera durante combate salvo equipamiento especializado futuro.
+
+## 18.15. Mission kill
+
+No existe una tirada ni un porcentaje de integridad para producir un mission kill.
+
+El juego evalúa las capacidades reales que todavía existen.
+
+Una nave puede quedar fuera de combate por:
 
 - pérdida de generación eléctrica suficiente;
-- pérdida de propulsión o control de actitud;
+- pérdida de propulsión;
+- pérdida de control de actitud;
 - pérdida de sensores necesarios;
-- pérdida de todos los sistemas ofensivos;
-- pérdida del mando o de la tripulación necesaria para operar;
+- pérdida de armamento necesario para continuar la misión;
+- pérdida del mando;
+- falta de tripulación suficiente;
 - descompresión de compartimentos críticos;
-- combinación de varias pérdidas parciales que elimine la capacidad de continuar la misión.
+- combinación de varios fallos parciales.
 
-La evaluación debe basarse en funciones reales disponibles, no en HP restantes.
+Una nave puede parecer exteriormente intacta y estar completamente incapacitada.
 
-## 18.14. Pérdida total de la nave
+Otra puede haber perdido varios compartimentos y seguir siendo capaz de combatir.
 
-Una nave puede considerarse perdida de forma total por causas como:
+## 18.16. Pérdida total y derelictos
+
+Una nave puede considerarse perdida totalmente por:
 
 - descompresión general no contenible;
 - muerte o incapacitación de toda la tripulación;
 - destrucción estructural extensa;
 - destrucción de la mayoría de componentes necesarios para cualquier recuperación;
-- cascadas catastróficas futuras como explosiones de munición o fallos de reactor.
+- cascadas catastróficas futuras, como explosiones de munición o fallos de reactor.
 
-Una nave puede quedar primero en mission kill y seguir existiendo físicamente como casco recuperable o derelicto.
+Una nave puede sufrir primero un mission kill y continuar existiendo físicamente.
 
-La diferencia entre mission kill, abandono, derelicto y destrucción física podrá utilizarse posteriormente en campaña, rescate y salvamento.
+Esto permite distinguir posteriormente entre:
 
-## 18.15. Perfil de las armas ya definidas
+- nave operativa;
+- mission kill;
+- abandonada;
+- derelicto recuperable;
+- destrucción física completa.
+
+## 18.17. Perfil de las armas ya definidas
 
 ### Misiles y torpedos
 
 - Damage extremadamente alto;
 - Penetration extremadamente alta;
 - Area of effect mayor que 0;
-- un impacto directo no puede ser detenido por blindaje;
+- un impacto directo destruye el compartimento alcanzado;
 - incluso una detonación cercana puede afectar a varios compartimentos.
 
 ### Láser defensivo contra naves
@@ -2713,36 +2783,38 @@ La diferencia entre mission kill, abandono, derelicto y destrucción física pod
 - Area of effect = 0;
 - Damage/Heat local relevante;
 - Penetration muy baja;
-- puede ser peligroso contra naves sin blindaje o muy poco blindadas;
-- incluso un blindaje moderado reduce fuertemente su capacidad de causar daño interno;
-- con suficiente blindaje puede resultar incapaz de penetrar y causar cualquier daño interno.
+- peligroso principalmente contra Armor nulo o muy ligero;
+- el blindaje reduce rápidamente su eficacia;
+- con suficiente Armor no produce daño interno.
 
 ### Defensa cinética contra naves
 
 - Area of effect = 0;
 - Penetration muy alta;
-- Damage menor que el de un arma explosiva;
+- Damage menor que el de un explosivo antinave;
 - puede atravesar incluso blindajes elevados;
-- puede dañar componentes y abrir brechas con facilidad una vez penetrado el casco;
-- es peligrosa a corta distancia pese a no estar diseñada como arma ofensiva principal.
+- puede destruir componentes y producir brechas;
+- es peligrosa a corta distancia aunque no sea un arma ofensiva dedicada.
 
-## 18.16. Principio general
+## 18.18. Principio general
 
-El sistema no pregunta:
+El sistema nunca pregunta:
 
 > ¿Cuántos HP le quedan a la nave?
 
 Pregunta:
 
 - ¿qué compartimento ha sido alcanzado?;
-- ¿ha penetrado el blindaje?;
-- ¿cuánto daño ha llegado al interior?;
+- ¿ha penetrado el Armor?;
+- ¿cuánto Damage ha llegado al interior?;
+- ¿qué Severity ha producido?;
 - ¿qué componentes siguen operativos?;
 - ¿qué tripulación sigue viva?;
-- ¿qué compartimentos conservan presión?;
+- ¿qué compartimentos mantienen Pressure?;
+- ¿qué mamparos están aislando las fugas?;
 - ¿qué funciones reales puede seguir realizando la nave?
 
-El resultado debe permitir naves aparentemente intactas pero incapaces de combatir y cascos gravemente dañados que todavía conserven alguna capacidad de movimiento o supervivencia.
+El resultado debe permitir tanto naves aparentemente intactas pero incapaces de combatir como cascos gravemente dañados que todavía conserven alguna capacidad.
 
 ---
 
@@ -3074,6 +3146,15 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 162. El control de daños repara automáticamente componentes dañados cuando existe tripulación y condiciones habitables, pero no puede reparar componentes destruidos.
 163. Las brechas leves pueden contenerse durante combate; las graves o catastróficas requieren aislar el compartimento.
 164. Mission kill y pérdida total emergen de capacidades perdidas, tripulación, presión y destrucción local, no de un umbral de HP.
+165. Después de Penetration y Armor, el daño local se convierte en Severity mediante local_damage / Resistance; Severity determina probabilidades de estado, no pérdida de HP.
+166. Compartimentos y componentes usan estados discretos INTACT/OPERATIONAL, DAMAGED y DESTROYED.
+167. Un compartimento DESTROYED pierde toda estanqueidad, elimina prácticamente a su tripulación y destruye los componentes alojados.
+168. Un impacto directo de misil o torpedo destruye automáticamente el compartimento impactado y después resuelve su Area of effect normalmente.
+169. Pressure/Air es una magnitud continua por compartimento y las brechas producen Leak Rate.
+170. El soporte vital puede compensar fugas pequeñas mediante Air Recovery, pero no fugas graves.
+171. Los mamparos OPEN/CLOSED/DESTROYED controlan la propagación de presión entre compartimentos.
+172. Las bajas de tripulación se resuelven por proporción sobre la tripulación presente, no necesariamente individuo por individuo.
+173. El control de daños permite DAMAGED -> OPERATIONAL y contener brechas pequeñas; DESTROYED no se repara durante combate.
 
 ---
 
@@ -3131,12 +3212,13 @@ Quedan por concretar, entre otros:
 - modelos concretos de señuelos y sus firmas/Huellas energéticas simuladas;
 - velocidad inicial y características de sus lanzadores;
 - drones;
-- curva exacta de falloff de Damage y Penetration en explosiones;
-- valores de resistencia estructural de compartimentos y Resistance de componentes;
-- tablas o fórmulas de probabilidad de estado Dañado/Destruido;
-- fórmula exacta que convierte Penetration excedente, Damage local y daño estructural en gravedad de brecha y fuga de atmósfera;
-- modelo de Pressure/Air y propagación entre compartimentos conectados;
-- reglas exactas de bajas por impacto y descompresión;
+- validación en gameplay de la curva de falloff de Damage y Penetration en explosiones;
+- valores concretos de Structural Resistance de compartimentos y Resistance de componentes;
+- ajuste final de la tabla de Severity para estados INTACT/DAMAGED/DESTROYED;
+- fórmula exacta que convierte Penetration excedente, Damage local y daño estructural en gravedad de brecha y Leak Rate;
+- valores concretos de Pressure/Air, Leak Rate y Air Recovery;
+- reglas exactas de igualación de presión entre compartimentos conectados;
+- porcentajes exactos de bajas por Severity y descompresión;
 - velocidad y requisitos del control de daños;
 - condiciones funcionales concretas para mission kill y pérdida total;
 - comportamiento de IA;

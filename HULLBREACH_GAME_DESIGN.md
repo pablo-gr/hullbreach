@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.17
+**Versión:** 1.18
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -3230,97 +3230,270 @@ La tripulación genérica no se gestiona como individuos y tiene un nivel genera
 
 # 24. Interfaz táctica
 
-## 24.1. Vista principal
+La interfaz táctica se divide en tres superficies complementarias:
 
-Cámara 3D en tercera persona alrededor de la nave.
+1. **vista principal 3D:** combate inmediato, selección y apuntado;
+2. **panel inferior de control:** configuración y operación de sistemas;
+3. **mapa táctico desplegable:** navegación y órdenes de movimiento.
 
-La escena 3D es parte del sistema de control y permite:
+La interfaz debe evitar duplicar funciones entre estas superficies.
+
+## 24.1. Barra superior
+
+La barra superior debe mantenerse deliberadamente mínima.
+
+Muestra únicamente:
+
+- **nombre de la nave controlada**;
+- **control del tiempo**.
+
+No muestra de forma permanente:
+
+- combustible;
+- energía;
+- firma;
+- Huella energética;
+- munición;
+- otros recursos o estados de sistemas.
+
+Esa información aparece dentro del panel correspondiente.
+
+El objetivo es mantener la parte superior limpia y reservar la información técnica para el sistema al que pertenece.
+
+## 24.2. Vista principal 3D
+
+La vista normal del juego es una cámara 3D en tercera persona alrededor de la nave.
+
+La escena 3D forma parte directa del sistema de control.
+
+Permite:
 
 - orientar la cámara;
-- seleccionar ecos y amenazas;
-- apuntar directamente sobre el espacio;
-- observar misiles, drones y naves;
+- seleccionar ecos, contactos y amenazas;
+- apuntar sobre el espacio;
+- indicar dirección de lanzamiento de misiles, torpedos y señuelos;
+- seleccionar blancos para interceptores, láseres y defensas cinéticas;
+- observar misiles, naves, estaciones y entorno;
 - comprender la geometría del enfrentamiento.
 
-## 24.2. Interfaz de movimiento
+La filosofía general de armas y defensas es:
 
-El movimiento normal se ordena desde el mapa táctico.
+> configurar o seleccionar el sistema en el panel inferior -> indicar el objetivo o dirección mediante clic en la vista principal.
 
-El jugador selecciona un destino mediante clic sobre:
+La vista 3D no se utiliza como sustituto del mapa de navegación.
+
+## 24.3. Información del contacto seleccionado
+
+La información del contacto seleccionado ocupa una zona permanente de la interfaz, situada conceptualmente en el lateral derecho.
+
+La zona permanece reservada incluso cuando no existe selección, evitando que la disposición del HUD cambie constantemente.
+
+Cuando existe un contacto seleccionado muestra únicamente información realmente conocida por los sensores.
+
+Puede incluir, según el nivel de información disponible:
+
+- identificador del eco/contacto;
+- posición estimada;
+- incertidumbre o error de posición;
+- distancia estimada;
+- velocidad estimada;
+- dirección estimada;
+- nivel de identificación;
+- categoría, tipo o modelo cuando hayan sido identificados;
+- antigüedad de la última medición;
+- otra información obtenida legítimamente por los sensores.
+
+Nunca muestra datos reales ocultos.
+
+## 24.4. Panel inferior de control
+
+En la parte inferior existe un panel de control permanente.
+
+Los principales grupos permanecen siempre visibles como botones, en lugar de ocultarse detrás de una única cadena de menús.
+
+Grupos iniciales:
+
+- **NAVIGATION**;
+- **SENSORS**;
+- **WEAPONS**;
+- **DEFENSE**;
+- **EW**;
+- **SHIP**.
+
+El control del tiempo permanece en la barra superior y no necesita un panel táctico propio obligatorio.
+
+Seleccionar un grupo despliega sus controles y estado detallado en el área contextual del panel inferior.
+
+Los botones principales siguen visibles mientras se utiliza otro grupo.
+
+Esto permite pasar rápidamente entre sistemas durante combate.
+
+## 24.5. Navigation
+
+El panel Navigation contiene la información relacionada con movimiento y combustible.
+
+Debe mostrar, como mínimo cuando proceda:
+
+- combustible disponible;
+- destino actual;
+- modo **Rápido / Económico**;
+- ETA;
+- estado de la maniobra;
+- cuerpo gravitatorio dominante;
+- advertencias de combustible;
+- acceso al mapa táctico.
+
+El combustible no necesita estar visible permanentemente fuera de este panel.
+
+### Mapa táctico desplegable
+
+Al abrir el mapa táctico, este sustituye **completamente** la vista 3D central.
+
+La barra superior, la ficha lateral de contacto cuando proceda y el panel inferior pueden conservar su función según el diseño visual definitivo, pero el área principal pasa a representar el mapa.
+
+El mapa táctico permite ordenar todos los movimientos mediante clic.
+
+Puede seleccionarse:
 
 - un cuerpo celeste;
-- una órbita o destino compatible;
-- una posición táctica cuando proceda.
+- una nave u objetivo móvil;
+- una posición del espacio.
 
-La nave calcula automáticamente la trayectoria física necesaria.
+La nave calcula automáticamente la maniobra.
 
-La interfaz debe poder mostrar de forma comprensible, sin exigir cálculos manuales:
+Cuando el jugador confirma o emite una orden de movimiento, el mapa táctico **se repliega automáticamente** y vuelve la vista 3D.
 
-- destino;
-- trayectoria prevista;
-- estado de la maniobra;
-- modo Rápido o Económico;
-- fases relevantes de aceleración o frenado;
-- tiempo estimado de llegada cuando sea útil;
-- cuerpo gravitatorio u órbita de referencia;
-- advertencias de combustible insuficiente o críticamente bajo.
+La trayectoria prevista:
 
-La trayectoria prevista se calcula hasta el final de la maniobra.
+- se calcula hasta el final de la maniobra;
+- puede mostrarse u ocultarse mediante un botón específico de la UI;
+- puede mostrar todas las fases previstas de aceleración, vuelo, giro, frenado y llegada.
 
-Debe existir un control en la UI para **mostrar u ocultar la trayectoria prevista de la nave**.
+El estado por defecto de la visualización de trayectoria sigue pendiente.
 
-El estado por defecto de esa visualización queda pendiente de decidir.
+## 24.6. Sensors
 
-Los controles exactos y la representación visual se diseñarán posteriormente.
+El panel Sensors permite operar los sensores instalados.
 
-## 24.3. Interfaz de detección
+Debe permitir, según equipamiento:
 
-El jugador debe poder:
-
-- elegir sensor activo;
-- elegir banda de distancia;
-- comprender el arco efectivo;
+- seleccionar uno de los sensores activos disponibles;
+- encenderlo o apagarlo;
+- seleccionar banda de distancia;
 - ejecutar un barrido;
-- ver los ecos obtenidos;
-- distinguir visualmente ecos recientes y antiguos;
-- consultar la información específica que proporcione cada eco.
+- consultar su estado;
+- consultar sensores defensivos;
+- consultar sensores pasivos direccionales;
+- comprender sectores ciegos o interferencias relevantes.
 
-No debe mostrarse una posición real oculta ni una correlación automática inexistente.
+La información propia de sensores, incluida su Huella energética cuando sea necesario para tomar decisiones, se muestra dentro de este panel.
 
-## 24.4. Interfaz de disparo
+Los ecos obtenidos se representan en la vista principal o mapa correspondiente sin revelar información oculta.
 
-El disparo de armas guiadas se mantiene deliberadamente simple.
+## 24.7. Weapons
+
+El panel Weapons sirve para **configurar el disparo**, mientras que el objetivo o dirección se indica después en la vista 3D.
 
 Para un misil:
 
-1. seleccionar el modelo de misil;
-2. seleccionar el número de misiles de la salva cuando el lanzador permita varios disparos simultáneos;
-3. hacer clic en la pantalla para indicar la dirección inicial;
-4. disparar.
+1. seleccionar modelo;
+2. seleccionar tamaño de salva cuando proceda;
+3. activar/preparar el disparo;
+4. hacer clic en la vista 3D para indicar la dirección inicial.
 
 Para un torpedo:
 
-1. seleccionar el modelo de torpedo;
-2. seleccionar la banda de activación: corta, media, larga o extrema;
-3. hacer clic en la pantalla para indicar la dirección inicial;
-4. disparar.
+1. seleccionar modelo;
+2. seleccionar banda de activación;
+3. activar/preparar el disparo;
+4. hacer clic en la vista 3D para indicar la dirección inicial.
 
-Para un señuelo:
+El panel muestra además:
 
-1. seleccionar el modelo de señuelo;
-2. seleccionar la banda de activación;
-3. hacer clic en la pantalla para indicar la dirección inicial;
-4. lanzar.
+- munición disponible;
+- estado de lanzadores;
+- reload;
+- arcos o indisponibilidades relevantes cuando sea necesario.
 
-El seeker, su Angle y el resto de prestaciones pertenecen al modelo del arma y no se ajustan manualmente durante cada disparo.
+El sistema selecciona automáticamente un lanzador válido o ejecuta la orientación necesaria para cumplir la orden.
 
-## 24.5. Interfaz defensiva
+## 24.8. Defense
 
-Cuando una amenaza alcanza la calidad de detección necesaria para una defensa compatible, aparece un indicador claro.
+El panel Defense sirve para seleccionar y configurar las defensas activas.
 
-El jugador selecciona la defensa y hace clic sobre la amenaza.
+Puede incluir:
+
+- interceptores disponibles;
+- estado de láseres defensivos;
+- munición cinética;
+- modo cinético **LOW / HIGH**;
+- colas de objetivos;
+- disponibilidad y estado de activación.
+
+Después de seleccionar una defensa, el jugador hace clic sobre la amenaza en la vista 3D.
+
+La selección sucesiva de varios blancos puede crear una cola cuando el sistema lo permita.
 
 Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
+
+## 24.9. Señuelos
+
+Los señuelos pueden integrarse en Weapons o Defense según la solución final de UX.
+
+Su interacción mantiene la misma filosofía general:
+
+1. seleccionar/configurar el señuelo en el panel;
+2. seleccionar banda de activación;
+3. hacer clic en la vista 3D para indicar dirección;
+4. lanzar.
+
+No necesitan selección posterior de objetivo.
+
+## 24.10. EW
+
+El panel EW contiene sistemas de guerra electrónica como el Jammer.
+
+Debe mostrar:
+
+- estado activo/inactivo;
+- Activation delay cuando proceda;
+- Interference;
+- Area of effect;
+- Huella energética;
+- advertencias sobre degradación de sensores propios.
+
+La información sobre Huella energética del Jammer pertenece a este panel, no a una barra global permanente.
+
+## 24.11. Ship
+
+El panel Ship da acceso al estado interno de la nave.
+
+Debe permitir consultar posteriormente:
+
+- compartimentos;
+- estado estructural;
+- Pressure/Air;
+- tripulación;
+- componentes;
+- averías;
+- reparaciones;
+- mamparos;
+- descompresión.
+
+Las funciones exactas de interacción con control de daños se diseñarán en detalle más adelante.
+
+## 24.12. Control del tiempo
+
+El control del tiempo permanece siempre accesible en la barra superior.
+
+Debe permitir:
+
+- seleccionar niveles manuales de aceleración temporal;
+- avanzar hasta el siguiente evento relevante.
+
+Durante combate permanece bloqueado a **1x**.
+
+Los eventos definidos en el sistema de navegación pueden devolver automáticamente la simulación a 1x.
 
 ---
 
@@ -3521,6 +3694,13 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 193. Durante combate el tiempo permanece siempre a 1x.
 194. Los eventos tácticos relevantes devuelven automáticamente la simulación a 1x.
 195. La trayectoria prevista puede mostrarse u ocultarse desde la UI y se calcula hasta el final de la maniobra.
+196. La interfaz táctica se divide entre vista 3D, panel inferior de sistemas y mapa táctico desplegable.
+197. La barra superior muestra únicamente el nombre de la nave y el control del tiempo.
+198. Fuel, Power, firma, Huella energética, munición y estados técnicos se muestran dentro de sus paneles correspondientes, no en una barra global.
+199. La información del contacto seleccionado dispone de una zona lateral permanente y solo muestra información realmente conocida.
+200. Los grupos NAVIGATION, SENSORS, WEAPONS, DEFENSE, EW y SHIP permanecen siempre visibles como accesos del panel inferior.
+201. El mapa táctico sustituye completamente la vista central 3D mientras está desplegado y se repliega automáticamente al emitir una orden de movimiento.
+202. La filosofía general de interacción de armas y defensas es configurar o seleccionar el sistema en el panel inferior y después indicar dirección u objetivo mediante clic en la vista 3D.
 
 ---
 

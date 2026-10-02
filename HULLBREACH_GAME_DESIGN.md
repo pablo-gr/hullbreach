@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.16
+**Versión:** 1.17
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -2340,13 +2340,15 @@ La capacidad concreta de giro puede depender del sistema de maniobra, tamaño, m
 
 La gravedad forma parte de la simulación de movimiento.
 
+Para simplificar la resolución, cada objeto utiliza en cada momento el **cuerpo gravitatorio dominante** en lugar de sumar simultáneamente todos los campos relevantes.
+
 Una nave sin empuje no permanece suspendida artificialmente en una posición fija.
 
 Su trayectoria evoluciona por:
 
 - velocidad actual;
 - inercia;
-- campos gravitatorios relevantes.
+- gravedad del cuerpo dominante.
 
 Las naves deben encontrarse normalmente en una trayectoria orbital o balística respecto a algún cuerpo gravitatorio.
 
@@ -2355,15 +2357,22 @@ Ejemplos:
 - una nave cercana a un planeta puede orbitar ese planeta;
 - una nave puede transferirse desde la órbita de un planeta hasta la órbita de una luna;
 - si abandona suficientemente el pozo gravitatorio del planeta, pasa a seguir una trayectoria dominada por la estrella del sistema;
+- un punto aparentemente vacío del espacio sigue perteneciendo a una trayectoria orbital respecto a algún cuerpo, normalmente la estrella;
 - en ausencia de empuje continúa siguiendo la trayectoria que resulte de su velocidad y la gravedad.
 
 No existe un estado especial de "quedarse quieto en el espacio".
+
+Cuando el jugador selecciona directamente un cuerpo celeste como destino, la navegación utiliza por defecto una **órbita estándar segura** alrededor de ese cuerpo.
 
 ## 16.5. Navegación automatizada
 
 El jugador expresa **intención de navegación**, no órdenes manuales de propulsión.
 
-En el mapa táctico selecciona el destino.
+Todas las órdenes de movimiento se emiten desde el mapa táctico seleccionando:
+
+- un cuerpo celeste;
+- una nave u otro objetivo móvil;
+- una posición del espacio.
 
 Ejemplo:
 
@@ -2385,7 +2394,41 @@ El jugador no necesita calcular vectores, quemados, velocidades de escape ni pun
 
 El resultado físico debe seguir utilizando el mismo modelo real de aceleración, inercia y gravedad.
 
-## 16.6. Frenado y llegada
+Los objetivos móviles se interceptan mediante recálculo continuo de la trayectoria mientras la orden siga activa.
+
+## 16.6. Modos de transferencia
+
+La navegación dispone inicialmente de dos modos:
+
+### Rápido
+
+Prioriza minimizar el tiempo de viaje.
+
+La nave:
+
+- acelera todo lo posible dentro de sus capacidades;
+- mantiene la aceleración mientras resulte útil;
+- calcula automáticamente el momento necesario para girar y frenar;
+- utiliza combustible de forma agresiva.
+
+El modo rápido se desactiva automáticamente si la transferencia consumiría casi todo el combustible restante.
+
+### Económico
+
+Prioriza reducir consumo de combustible.
+
+La nave:
+
+- acelera solo hasta alcanzar una velocidad adecuada para la transferencia;
+- apaga el motor;
+- continúa por inercia durante la mayor parte del trayecto;
+- vuelve a utilizar propulsión cuando sea necesario para corregir o capturar la órbita de destino.
+
+Si incluso el modo económico consumiría casi todo el combustible restante, la interfaz muestra una advertencia antes de ejecutar la transferencia.
+
+Si no existe combustible suficiente para completar físicamente la transferencia, la orden se rechaza.
+
+## 16.7. Frenado y llegada
 
 La nave no reduce velocidad automáticamente mediante una regla artificial.
 
@@ -2404,25 +2447,49 @@ Puede, por ejemplo:
 
 El jugador solo ordena el destino.
 
-## 16.7. Movimiento táctico y órdenes de combate
+## 16.8. Movimiento táctico y órdenes de combate
 
 La misma automatización se aplica durante combate.
+
+Todas las órdenes de movimiento se emiten sobre el mapa táctico.
+
+Ejemplos:
+
+- hacer clic sobre un objetivo equivale a ordenar aproximación o interceptación;
+- hacer clic en un punto alejado permite ordenar retirada o separación;
+- hacer clic en una posición concreta ordena desplazamiento hacia ese punto.
+
+No existen órdenes especiales separadas de "acercarse", "alejarse" o similares cuando pueden expresarse directamente mediante el mapa.
+
+Los objetivos móviles provocan recálculo continuo de la trayectoria mientras la orden siga vigente.
+
+### Prioridad de órdenes
+
+La **última orden recibida tiene prioridad**.
+
+Si una nueva orden es incompatible con la anterior, la orden previa se cancela.
+
+Ejemplos:
+
+- una orden de disparo puede interrumpir una maniobra de navegación;
+- una orden de barrido puede interrumpir temporalmente o cancelar una orientación previa;
+- una nueva orden de movimiento sustituye a la anterior.
+
+La nave recalcula después la maniobra necesaria para cumplir la orden vigente.
 
 Cuando una orden exige una orientación determinada, la nave intenta cumplirla automáticamente.
 
 Ejemplos:
 
-- si el jugador ordena disparar y ningún lanzador tiene arco válido, la nave puede girar para permitir el lanzamiento;
-- si un sensor activo necesita orientar el morro hacia una zona, la nave puede ejecutar el giro necesario;
-- si una defensa necesita un arco concreto, la nave puede intentar orientarse para obtenerlo.
+- si el jugador ordena disparar y ningún lanzador tiene arco válido, la nave gira lo necesario;
+- si un sensor activo necesita orientar el morro hacia una zona, la nave ejecuta el giro necesario;
+- si una defensa necesita un arco concreto, la nave intenta obtenerlo.
 
 La nave no rompe las reglas físicas para hacerlo.
 
 Rotar cambia orientación; cambiar trayectoria requiere aceleración.
 
-La automatización decide las maniobras necesarias para satisfacer la orden hasta donde las capacidades físicas de la nave lo permitan.
-
-## 16.8. Movimiento, firma y sensores
+## 16.9. Movimiento, firma y sensores
 
 El movimiento interactúa directamente con el sistema de información.
 
@@ -2449,7 +2516,7 @@ La orientación sigue siendo crucial porque determina:
 - arcos de láseres y defensas cinéticas;
 - dirección inicial de disparos y maniobras.
 
-## 16.9. Colisiones
+## 16.10. Colisiones
 
 Las colisiones son físicas.
 
@@ -2464,27 +2531,36 @@ Una nave que impacta contra:
 
 puede quedar destruida directamente.
 
-No existe una protección artificial contra una colisión catastrófica.
+La navegación automática evita siempre las colisiones cuando físicamente puede hacerlo y dispone de combustible suficiente.
 
-La navegación automática debe intentar evitar colisiones no ordenadas, pero si una trayectoria conduce realmente a un impacto y no se corrige a tiempo, se aplican sus consecuencias físicas.
+El jugador no puede ordenar deliberadamente una trayectoria de colisión.
 
-## 16.10. Aceleración temporal
+Si ya no existe tiempo, aceleración o combustible suficiente para evitar el impacto, la colisión ocurre y se aplican sus consecuencias físicas.
 
-Las distancias orbitales y los tiempos de viaje hacen necesaria alguna forma de **aceleración del tiempo**.
+## 16.11. Aceleración temporal
 
-El objetivo es permitir que:
+Las distancias orbitales y los tiempos de viaje hacen necesaria la **aceleración del tiempo**.
 
-- transferencias orbitales;
-- fases largas de vuelo inercial;
-- viajes entre cuerpos de un sistema;
+Existirán dos formas de utilizarla:
 
-puedan completarse sin obligar al jugador a esperar en tiempo real.
+- niveles manuales de aceleración temporal;
+- una orden de avance automático hasta el próximo evento relevante.
 
-El diseño exacto queda pendiente.
+Durante combate el juego funciona siempre a **1x**.
 
-La aceleración temporal tendrá que reducirse o bloquearse automáticamente cuando existan situaciones que requieran interacción inmediata, especialmente durante combate, detecciones importantes, amenazas, aproximaciones críticas o maniobras sensibles.
+La aceleración temporal vuelve automáticamente a 1x ante eventos que requieren atención, como mínimo:
 
-## 16.11. Principio de control
+- aparición de un nuevo eco relevante;
+- alerta de seeker o misil;
+- entrada de una amenaza en alcance defensivo;
+- comienzo o final de una maniobra importante;
+- daño o avería;
+- llegada al destino;
+- combustible crítico.
+
+La lista exacta puede ampliarse durante implementación.
+
+## 16.12. Principio de control
 
 El jugador decide:
 
@@ -3183,9 +3259,17 @@ La interfaz debe poder mostrar de forma comprensible, sin exigir cálculos manua
 - destino;
 - trayectoria prevista;
 - estado de la maniobra;
+- modo Rápido o Económico;
 - fases relevantes de aceleración o frenado;
 - tiempo estimado de llegada cuando sea útil;
-- cuerpo gravitatorio u órbita de referencia.
+- cuerpo gravitatorio u órbita de referencia;
+- advertencias de combustible insuficiente o críticamente bajo.
+
+La trayectoria prevista se calcula hasta el final de la maniobra.
+
+Debe existir un control en la UI para **mostrar u ocultar la trayectoria prevista de la nave**.
+
+El estado por defecto de esa visualización queda pendiente de decidir.
 
 Los controles exactos y la representación visual se diseñarán posteriormente.
 
@@ -3423,7 +3507,20 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 179. Las naves se encuentran normalmente en órbitas o trayectorias balísticas bajo gravedad; al abandonar el pozo de un planeta pasan a una trayectoria dominada por el cuerpo gravitatorio correspondiente, normalmente la estrella.
 180. Las órdenes tácticas pueden provocar orientación automática de la nave para satisfacer arcos de sensores, armas o defensas, sin romper las reglas físicas.
 181. Las colisiones son físicas y una colisión catastrófica puede destruir directamente la nave.
-182. El juego necesitará aceleración temporal para viajes y fases orbitales largas; su diseño exacto queda pendiente.
+182. El juego utiliza el cuerpo gravitatorio dominante en cada momento para simplificar la gravedad.
+183. Al seleccionar un cuerpo celeste como destino se utiliza por defecto una órbita estándar segura.
+184. Existen dos modos de transferencia: Rápido y Económico.
+185. El modo Rápido prioriza tiempo y acelera agresivamente; se desactiva si consumiría casi todo el combustible restante.
+186. El modo Económico acelera hasta una velocidad adecuada, continúa por inercia y minimiza consumo; si aun así agotaría casi todo el combustible se muestra una advertencia.
+187. Una transferencia se rechaza si no existe combustible suficiente para completarla.
+188. Todas las órdenes de movimiento se dan desde el mapa táctico y los objetivos móviles se interceptan mediante recálculo continuo.
+189. La última orden recibida sustituye a cualquier orden previa incompatible.
+190. La navegación automática evita colisiones siempre que disponga de tiempo, aceleración y combustible suficientes; no se permiten embestidas deliberadas.
+191. La gravedad se sigue simulando durante combate y también afecta a misiles y torpedos.
+192. La aceleración temporal puede controlarse manualmente o avanzar hasta el próximo evento relevante.
+193. Durante combate el tiempo permanece siempre a 1x.
+194. Los eventos tácticos relevantes devuelven automáticamente la simulación a 1x.
+195. La trayectoria prevista puede mostrarse u ocultarse desde la UI y se calcula hasta el final de la maniobra.
 
 ---
 
@@ -3448,12 +3545,15 @@ Quedan por concretar, entre otros:
 - tamaños y espacio interno de cascos;
 - curva exacta energía/rendimiento;
 - valores concretos de Acceleration, Fuel consumption, Energy footprint y Signature increase de motores;
-- modelo numérico de gravedad y resolución orbital;
-- sistema de planificación automática de trayectorias y captura orbital;
-- comportamiento de navegación automática en combate y prioridades entre órdenes;
+- modelo numérico de gravedad usando cuerpo dominante y umbrales de cambio de influencia;
+- algoritmo de planificación automática de trayectorias y captura orbital;
+- criterio exacto de velocidad "adecuada" para el modo Económico;
+- umbral concreto de combustible que desactiva el modo Rápido;
+- umbral concreto que dispara la advertencia de combustible en modo Económico;
 - presentación y controles definitivos del mapa táctico de navegación;
-- reglas exactas y niveles de aceleración temporal;
-- condiciones que fuerzan reducción o cancelación automática de aceleración temporal;
+- niveles concretos de aceleración temporal;
+- lista final de eventos que fuerzan retorno a 1x;
+- estado por defecto de la visualización de trayectoria prevista;
 - duración, persistencia y magnitud exacta de la firma producida por estelas de propelente;
 - valores concretos de Maneuverability/Turn Rate y propulsores de maniobra;
 - tiempos de viaje y cinemática de misiles y torpedos;

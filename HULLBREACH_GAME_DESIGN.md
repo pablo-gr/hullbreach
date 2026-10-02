@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.15
+**Versión:** 1.16
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -1332,13 +1332,21 @@ No existe una velocidad máxima artificial: mientras quede combustible y el moto
 
 ### 14.3.2. Maneuverability
 
-La Maneuverability determina la capacidad para cambiar la dirección del vector de movimiento y orientar la trayectoria hacia el objetivo.
+La Maneuverability determina la rapidez con la que el misil o torpedo puede cambiar su **orientación**.
 
-Las maniobras de orientación y corrección lateral consumen muy poco combustible en comparación con la aceleración principal.
+No cambia directamente su vector de velocidad.
 
-Este principio se aplica también a los motores de las naves.
+Para corregir la trayectoria el arma debe:
 
-Por tanto, un arma puede conocer con gran precisión dónde está un blanco y aun así fallar si no dispone de Maneuverability suficiente para modificar su trayectoria a tiempo.
+1. girar hacia una orientación adecuada;
+2. aplicar aceleración con su motor;
+3. modificar así su vector de velocidad.
+
+Los cambios de orientación consumen muy poco combustible en comparación con la aceleración principal.
+
+Este mismo principio se aplica a las naves.
+
+Por tanto, un arma puede conocer con gran precisión dónde está un blanco y aun así fallar si no puede orientarse y acelerar con suficiente rapidez para corregir su trayectoria.
 
 ### 14.3.3. Fin del combustible
 
@@ -2247,25 +2255,254 @@ La nave más protegida no es la que acumula más resistencia estructural, sino l
 
 ---
 
-# 16. Maniobra
+# 16. Movimiento y navegación
 
-La maniobra no está pensada principalmente para esquivar físicamente un misil mediante reflejos.
+Hullbreach utiliza un modelo de movimiento físicamente coherente basado en:
 
-Los motores tienen, entre otras propiedades, **Acceleration** y **Maneuverability**. La aceleración es el principal origen del consumo de combustible, mientras que los cambios de orientación y correcciones de maniobra son comparativamente baratos.
+- aceleración;
+- inercia;
+- orientación independiente del vector de velocidad;
+- gravedad;
+- órbitas.
 
-Sirve para:
+No existe movimiento arcade ni velocidad máxima artificial.
 
-- orientar sensores;
-- orientar defensas y armas;
-- evitar zonas muertas;
-- mantener o perder ecos;
-- aprovechar cuerpos celestes y polvo;
-- modificar firma mediante uso o apagado del motor principal;
-- cambiar la trayectoria esperada por el atacante;
-- dificultar seekers estrechos;
-- romper soluciones de tiro.
+El jugador no pilota manualmente la nave durante los traslados normales. Ordena un destino y el sistema de navegación calcula y ejecuta la maniobra necesaria.
 
-El combate tridimensional debe importar porque los sensores activos son muy direccionales y pueden ser prácticamente inútiles arriba, abajo o detrás.
+## 16.1. Estado cinemático real
+
+Cada nave mantiene al menos:
+
+- posición;
+- velocidad;
+- orientación;
+- velocidad de rotación;
+- aceleración actual.
+
+La orientación y el vector de velocidad son magnitudes distintas.
+
+Una nave puede:
+
+- desplazarse en una dirección;
+- estar orientada hacia otra;
+- rotar sin cambiar inmediatamente su trayectoria;
+- apagar motores y conservar su velocidad por inercia.
+
+Para modificar el vector de velocidad debe aplicar aceleración.
+
+## 16.2. Motores principales
+
+El motor principal tiene como mínimo:
+
+- **Acceleration:** aceleración que puede proporcionar;
+- **Fuel consumption:** combustible consumido al producir aceleración;
+- **Energy footprint:** consumo y huella energética mientras funciona;
+- **Signature increase:** incremento de firma física producido durante la aceleración por el motor y su estela de propelente.
+
+La velocidad absoluta no aumenta por sí misma la firma.
+
+Un motor concreto puede incrementar poco o mucho la firma mientras acelera. Este incremento depende del modelo del motor y no se considera universalmente extremo.
+
+Mientras exista combustible no hay una velocidad máxima artificial.
+
+Al apagar el motor:
+
+- desaparece su aceleración;
+- cesa el consumo de propelente;
+- desaparece la contribución de firma asociada a la estela según las reglas de firma;
+- la nave conserva su velocidad actual por inercia.
+
+## 16.3. Orientación y Maneuverability
+
+**Maneuverability** representa la velocidad con la que una nave, misil u otro objeto puede cambiar su orientación.
+
+No modifica directamente el vector de velocidad.
+
+Una nave que quiera cambiar de trayectoria debe:
+
+1. girar hasta orientar el empuje en una dirección adecuada;
+2. aplicar aceleración;
+3. modificar así su vector de velocidad.
+
+Por tanto una nave puede girar rápidamente y seguir desplazándose durante un tiempo en una dirección distinta a aquella hacia la que apunta.
+
+Los propulsores de maniobra o sistemas equivalentes producen los cambios de orientación.
+
+En comparación con el motor principal:
+
+- consumen poco combustible;
+- generan mucha menos firma;
+- generan una Huella energética comparativamente menor.
+
+La capacidad concreta de giro puede depender del sistema de maniobra, tamaño, masa o inercia de la nave durante la implementación.
+
+## 16.4. Gravedad y órbitas
+
+La gravedad forma parte de la simulación de movimiento.
+
+Una nave sin empuje no permanece suspendida artificialmente en una posición fija.
+
+Su trayectoria evoluciona por:
+
+- velocidad actual;
+- inercia;
+- campos gravitatorios relevantes.
+
+Las naves deben encontrarse normalmente en una trayectoria orbital o balística respecto a algún cuerpo gravitatorio.
+
+Ejemplos:
+
+- una nave cercana a un planeta puede orbitar ese planeta;
+- una nave puede transferirse desde la órbita de un planeta hasta la órbita de una luna;
+- si abandona suficientemente el pozo gravitatorio del planeta, pasa a seguir una trayectoria dominada por la estrella del sistema;
+- en ausencia de empuje continúa siguiendo la trayectoria que resulte de su velocidad y la gravedad.
+
+No existe un estado especial de "quedarse quieto en el espacio".
+
+## 16.5. Navegación automatizada
+
+El jugador expresa **intención de navegación**, no órdenes manuales de propulsión.
+
+En el mapa táctico selecciona el destino.
+
+Ejemplo:
+
+> La nave está en órbita de un planeta y el jugador quiere viajar hasta su luna.
+
+El jugador hace clic sobre la luna.
+
+El sistema de navegación calcula automáticamente:
+
+- trayectoria necesaria;
+- orientación;
+- fases de aceleración;
+- fases de vuelo por inercia;
+- momento de giro cuando sea necesario;
+- desaceleración;
+- maniobra final necesaria para terminar en la órbita de destino.
+
+El jugador no necesita calcular vectores, quemados, velocidades de escape ni puntos de frenado.
+
+El resultado físico debe seguir utilizando el mismo modelo real de aceleración, inercia y gravedad.
+
+## 16.6. Frenado y llegada
+
+La nave no reduce velocidad automáticamente mediante una regla artificial.
+
+Para frenar debe producir una aceleración que modifique el vector de velocidad en el sentido necesario.
+
+El sistema de navegación automatiza completamente esta maniobra.
+
+Puede, por ejemplo:
+
+1. acelerar durante la primera parte del viaje;
+2. viajar por inercia cuando sea apropiado;
+3. reorientar la nave;
+4. acelerar en dirección contraria o adecuada;
+5. reducir la velocidad relativa;
+6. ejecutar la maniobra de captura orbital.
+
+El jugador solo ordena el destino.
+
+## 16.7. Movimiento táctico y órdenes de combate
+
+La misma automatización se aplica durante combate.
+
+Cuando una orden exige una orientación determinada, la nave intenta cumplirla automáticamente.
+
+Ejemplos:
+
+- si el jugador ordena disparar y ningún lanzador tiene arco válido, la nave puede girar para permitir el lanzamiento;
+- si un sensor activo necesita orientar el morro hacia una zona, la nave puede ejecutar el giro necesario;
+- si una defensa necesita un arco concreto, la nave puede intentar orientarse para obtenerlo.
+
+La nave no rompe las reglas físicas para hacerlo.
+
+Rotar cambia orientación; cambiar trayectoria requiere aceleración.
+
+La automatización decide las maniobras necesarias para satisfacer la orden hasta donde las capacidades físicas de la nave lo permitan.
+
+## 16.8. Movimiento, firma y sensores
+
+El movimiento interactúa directamente con el sistema de información.
+
+La velocidad absoluta no incrementa la firma física.
+
+La aceleración mediante el motor principal puede incrementar:
+
+- firma física, según Signature increase del motor;
+- Huella energética, según Energy footprint del motor.
+
+Por tanto es posible:
+
+1. acelerar intensamente;
+2. hacerse más visible durante la maniobra;
+3. apagar el motor;
+4. continuar a gran velocidad;
+5. recuperar una firma mucho menor.
+
+La orientación sigue siendo crucial porque determina:
+
+- arcos de sensores activos;
+- sectores ciegos de sensores defensivos;
+- arcos de lanzadores;
+- arcos de láseres y defensas cinéticas;
+- dirección inicial de disparos y maniobras.
+
+## 16.9. Colisiones
+
+Las colisiones son físicas.
+
+Una nave que impacta contra:
+
+- otra nave;
+- una estación;
+- un asteroide;
+- un planeta;
+- una luna;
+- otro obstáculo suficientemente masivo;
+
+puede quedar destruida directamente.
+
+No existe una protección artificial contra una colisión catastrófica.
+
+La navegación automática debe intentar evitar colisiones no ordenadas, pero si una trayectoria conduce realmente a un impacto y no se corrige a tiempo, se aplican sus consecuencias físicas.
+
+## 16.10. Aceleración temporal
+
+Las distancias orbitales y los tiempos de viaje hacen necesaria alguna forma de **aceleración del tiempo**.
+
+El objetivo es permitir que:
+
+- transferencias orbitales;
+- fases largas de vuelo inercial;
+- viajes entre cuerpos de un sistema;
+
+puedan completarse sin obligar al jugador a esperar en tiempo real.
+
+El diseño exacto queda pendiente.
+
+La aceleración temporal tendrá que reducirse o bloquearse automáticamente cuando existan situaciones que requieran interacción inmediata, especialmente durante combate, detecciones importantes, amenazas, aproximaciones críticas o maniobras sensibles.
+
+## 16.11. Principio de control
+
+El jugador decide:
+
+> dónde quiere ir y qué quiere hacer.
+
+El sistema de navegación decide:
+
+> qué orientación, aceleración, frenado y trayectoria son necesarios para intentarlo físicamente.
+
+La profundidad debe proceder de:
+
+- elegir rutas y destinos;
+- decidir cuándo aceptar la firma de una aceleración;
+- aprovechar órbitas y gravedad;
+- coordinar orientación con sensores y armas;
+- decidir cuándo modificar una trayectoria;
+
+no de obligar al jugador a pilotar manualmente cada maniobra.
 
 ---
 
@@ -2929,7 +3166,30 @@ La escena 3D es parte del sistema de control y permite:
 - observar misiles, drones y naves;
 - comprender la geometría del enfrentamiento.
 
-## 24.2. Interfaz de detección
+## 24.2. Interfaz de movimiento
+
+El movimiento normal se ordena desde el mapa táctico.
+
+El jugador selecciona un destino mediante clic sobre:
+
+- un cuerpo celeste;
+- una órbita o destino compatible;
+- una posición táctica cuando proceda.
+
+La nave calcula automáticamente la trayectoria física necesaria.
+
+La interfaz debe poder mostrar de forma comprensible, sin exigir cálculos manuales:
+
+- destino;
+- trayectoria prevista;
+- estado de la maniobra;
+- fases relevantes de aceleración o frenado;
+- tiempo estimado de llegada cuando sea útil;
+- cuerpo gravitatorio u órbita de referencia.
+
+Los controles exactos y la representación visual se diseñarán posteriormente.
+
+## 24.3. Interfaz de detección
 
 El jugador debe poder:
 
@@ -2943,7 +3203,7 @@ El jugador debe poder:
 
 No debe mostrarse una posición real oculta ni una correlación automática inexistente.
 
-## 24.3. Interfaz de disparo
+## 24.4. Interfaz de disparo
 
 El disparo de armas guiadas se mantiene deliberadamente simple.
 
@@ -2970,7 +3230,7 @@ Para un señuelo:
 
 El seeker, su Angle y el resto de prestaciones pertenecen al modelo del arma y no se ajustan manualmente durante cada disparo.
 
-## 24.4. Interfaz defensiva
+## 24.5. Interfaz defensiva
 
 Cuando una amenaza alcanza la calidad de detección necesaria para una defensa compatible, aparece un indicador claro.
 
@@ -3155,6 +3415,15 @@ Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
 171. Los mamparos OPEN/CLOSED/DESTROYED controlan la propagación de presión entre compartimentos.
 172. Las bajas de tripulación se resuelven por proporción sobre la tripulación presente, no necesariamente individuo por individuo.
 173. El control de daños permite DAMAGED -> OPERATIONAL y contener brechas pequeñas; DESTROYED no se repara durante combate.
+174. El movimiento utiliza aceleración, inercia y gravedad reales; no existe velocidad máxima artificial ni posición suspendida sin soporte físico.
+175. La orientación es independiente del vector de velocidad.
+176. Maneuverability representa velocidad de giro/orientación; para cambiar el vector de velocidad es necesario acelerar en una nueva dirección.
+177. El motor principal se define al menos por Acceleration, Fuel consumption, Energy footprint y Signature increase durante aceleración.
+178. El jugador no pilota manualmente los traslados normales: selecciona un destino y la navegación calcula y ejecuta aceleración, vuelo, frenado y captura orbital.
+179. Las naves se encuentran normalmente en órbitas o trayectorias balísticas bajo gravedad; al abandonar el pozo de un planeta pasan a una trayectoria dominada por el cuerpo gravitatorio correspondiente, normalmente la estrella.
+180. Las órdenes tácticas pueden provocar orientación automática de la nave para satisfacer arcos de sensores, armas o defensas, sin romper las reglas físicas.
+181. Las colisiones son físicas y una colisión catastrófica puede destruir directamente la nave.
+182. El juego necesitará aceleración temporal para viajes y fases orbitales largas; su diseño exacto queda pendiente.
 
 ---
 
@@ -3178,8 +3447,15 @@ Quedan por concretar, entre otros:
 - modelo de generación eléctrica;
 - tamaños y espacio interno de cascos;
 - curva exacta energía/rendimiento;
-- movimiento y aceleración;
+- valores concretos de Acceleration, Fuel consumption, Energy footprint y Signature increase de motores;
+- modelo numérico de gravedad y resolución orbital;
+- sistema de planificación automática de trayectorias y captura orbital;
+- comportamiento de navegación automática en combate y prioridades entre órdenes;
+- presentación y controles definitivos del mapa táctico de navegación;
+- reglas exactas y niveles de aceleración temporal;
+- condiciones que fuerzan reducción o cancelación automática de aceleración temporal;
 - duración, persistencia y magnitud exacta de la firma producida por estelas de propelente;
+- valores concretos de Maneuverability/Turn Rate y propulsores de maniobra;
 - tiempos de viaje y cinemática de misiles y torpedos;
 - valores concretos de aceleración, combustible y velocidad inicial;
 - definición exacta de las bandas de activación de torpedos;

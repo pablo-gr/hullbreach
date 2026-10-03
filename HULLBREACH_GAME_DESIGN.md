@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.18
+**Versión:** 1.19
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -3309,9 +3309,7 @@ Nunca muestra datos reales ocultos.
 
 En la parte inferior existe un panel de control permanente.
 
-Los principales grupos permanecen siempre visibles como botones, en lugar de ocultarse detrás de una única cadena de menús.
-
-Grupos iniciales:
+Los principales grupos permanecen siempre visibles como botones:
 
 - **NAVIGATION**;
 - **SENSORS**;
@@ -3320,56 +3318,70 @@ Grupos iniciales:
 - **EW**;
 - **SHIP**.
 
-El control del tiempo permanece en la barra superior y no necesita un panel táctico propio obligatorio.
+El control del tiempo permanece en la barra superior.
 
-Seleccionar un grupo despliega sus controles y estado detallado en el área contextual del panel inferior.
+### Principio de mínima información
 
-Los botones principales siguen visibles mientras se utiliza otro grupo.
+Cada panel debe ocupar el menor espacio posible y mostrar únicamente la información necesaria para tomar decisiones inmediatas.
 
-Esto permite pasar rápidamente entre sistemas durante combate.
+La interfaz debe evitar:
+
+- indicadores redundantes;
+- estadísticas técnicas que no requieren atención continua;
+- números que no cambian la decisión actual;
+- controles que puedan resolverse automáticamente;
+- botones separados para acciones que puedan expresarse de forma más simple.
+
+Los detalles avanzados pueden aparecer mediante información contextual, tooltips o pantallas específicas cuando sean realmente necesarios.
+
+Seleccionar un grupo despliega solo sus controles esenciales en el área contextual del panel inferior.
 
 ## 24.5. Navigation
 
-El panel Navigation contiene la información relacionada con movimiento y combustible.
+El panel Navigation debe ser extremadamente compacto.
 
-Debe mostrar, como mínimo cuando proceda:
+Muestra únicamente:
 
-- combustible disponible;
-- destino actual;
-- modo **Rápido / Económico**;
+- **Fuel**;
+- **velocidad actual**;
+- selector de modo:
+  - **FAST**;
+  - **ECONOMIC**;
+  - **ENGINE OFF**;
+- botón para abrir el **TACTICAL MAP**.
+
+No muestra de forma permanente:
+
+- destino;
 - ETA;
-- estado de la maniobra;
-- cuerpo gravitatorio dominante;
-- advertencias de combustible;
-- acceso al mapa táctico.
+- cuerpo gravitatorio;
+- fases de aceleración;
+- trayectoria prevista;
+- detalles de planificación orbital.
 
-El combustible no necesita estar visible permanentemente fuera de este panel.
+Esa información pertenece al mapa táctico cuando sea necesaria.
+
+### Modos
+
+**FAST** utiliza el modo de transferencia rápido ya definido.
+
+**ECONOMIC** utiliza el modo económico ya definido.
+
+**ENGINE OFF** ordena apagar el motor principal y mantener la trayectoria física resultante por inercia y gravedad.
 
 ### Mapa táctico desplegable
 
-Al abrir el mapa táctico, este sustituye **completamente** la vista 3D central.
+El botón TACTICAL MAP abre el mapa y sustituye completamente la vista central 3D.
 
-La barra superior, la ficha lateral de contacto cuando proceda y el panel inferior pueden conservar su función según el diseño visual definitivo, pero el área principal pasa a representar el mapa.
+El jugador selecciona allí el destino.
 
-El mapa táctico permite ordenar todos los movimientos mediante clic.
+Cuando se emite una orden de movimiento:
 
-Puede seleccionarse:
+- la nave calcula automáticamente la maniobra;
+- el mapa se repliega;
+- vuelve la vista 3D.
 
-- un cuerpo celeste;
-- una nave u objetivo móvil;
-- una posición del espacio.
-
-La nave calcula automáticamente la maniobra.
-
-Cuando el jugador confirma o emite una orden de movimiento, el mapa táctico **se repliega automáticamente** y vuelve la vista 3D.
-
-La trayectoria prevista:
-
-- se calcula hasta el final de la maniobra;
-- puede mostrarse u ocultarse mediante un botón específico de la UI;
-- puede mostrar todas las fases previstas de aceleración, vuelo, giro, frenado y llegada.
-
-El estado por defecto de la visualización de trayectoria sigue pendiente.
+La trayectoria prevista puede mostrarse u ocultarse desde el propio mapa táctico.
 
 ## 24.6. Sensors
 
@@ -3382,17 +3394,37 @@ Debe permitir, según equipamiento:
 - seleccionar banda de distancia;
 - ejecutar un barrido;
 - consultar su estado;
-- consultar sensores defensivos;
-- consultar sensores pasivos direccionales;
-- comprender sectores ciegos o interferencias relevantes.
+- consultar sensores defensivos;## 24.6. Sensors
 
-La información propia de sensores, incluida su Huella energética cuando sea necesario para tomar decisiones, se muestra dentro de este panel.
+El panel Sensors debe mostrar únicamente los sensores realmente disponibles en la nave y los controles necesarios para utilizarlos.
 
-Los ecos obtenidos se representan en la vista principal o mapa correspondiente sin revelar información oculta.
+Para cada sensor:
+
+- control **ON/OFF**;
+- identificación suficiente para distinguir qué sensor es.
+
+Para sensores activos:
+
+- selector de distancia de búsqueda;
+- acción de barrido cuando proceda.
+
+No deben mostrarse permanentemente estadísticas como:
+
+- Sensitivity;
+- Precision;
+- Energy footprint;
+- perfiles angulares;
+- parámetros internos del sensor;
+
+salvo que alguna de ellas sea necesaria para una decisión inmediata o se consulte de forma contextual.
+
+Los sensores defensivos y pasivos también se controlan desde este mismo panel mediante ON/OFF cuando sean desactivables.
+
+Las zonas ciegas, interferencias y alertas relevantes deben comunicarse visualmente solo cuando estén ocurriendo, no mediante indicadores permanentes.
 
 ## 24.7. Weapons
 
-El panel Weapons sirve para **configurar el disparo**, mientras que el objetivo o dirección se indica después en la vista 3D.
+El panel Weapons debe ser compacto y sirve únicamente para **configurar lo imprescindible del disparo**, mientras que el objetivo o dirección se indica después en la vista 3D.
 
 Para un misil:
 
@@ -3408,27 +3440,22 @@ Para un torpedo:
 3. activar/preparar el disparo;
 4. hacer clic en la vista 3D para indicar la dirección inicial.
 
-El panel muestra además:
-
-- munición disponible;
-- estado de lanzadores;
-- reload;
-- arcos o indisponibilidades relevantes cuando sea necesario.
+Debe mostrar únicamente la munición disponible y los estados o bloqueos que sean relevantes en ese momento. Reload, arcos y otros detalles no necesitan indicadores permanentes si el sistema puede resolverlos automáticamente.
 
 El sistema selecciona automáticamente un lanzador válido o ejecuta la orientación necesaria para cumplir la orden.
 
 ## 24.8. Defense
 
-El panel Defense sirve para seleccionar y configurar las defensas activas.
+El panel Defense debe ser compacto y sirve para seleccionar la defensa activa y, únicamente cuando proceda, su modo de funcionamiento.
 
-Puede incluir:
+Debe mostrar solo lo necesario para actuar, por ejemplo:
 
-- interceptores disponibles;
-- estado de láseres defensivos;
-- munición cinética;
+- tipo de defensa seleccionable;
+- munición cuando exista;
 - modo cinético **LOW / HIGH**;
-- colas de objetivos;
-- disponibilidad y estado de activación.
+- indisponibilidad cuando exista.
+
+Las colas de objetivos y estados detallados solo aparecen cuando existen o son relevantes.
 
 Después de seleccionar una defensa, el jugador hace clic sobre la amenaza en la vista 3D.
 
@@ -3453,34 +3480,32 @@ No necesitan selección posterior de objetivo.
 
 El panel EW contiene sistemas de guerra electrónica como el Jammer.
 
-Debe mostrar:
+Por defecto debe mostrar únicamente:
 
-- estado activo/inactivo;
-- Activation delay cuando proceda;
-- Interference;
-- Area of effect;
-- Huella energética;
-- advertencias sobre degradación de sensores propios.
+- sistema disponible;
+- estado **ON/OFF**;
+- Activation delay cuando esté activándose;
+- alertas relevantes sobre interferencia propia.
 
-La información sobre Huella energética del Jammer pertenece a este panel, no a una barra global permanente.
+Interference, Area of effect, Huella energética y demás estadísticas no necesitan mostrarse permanentemente durante el combate; pueden consultarse de forma contextual cuando sea necesario.
 
 ## 24.11. Ship
 
 El panel Ship da acceso al estado interno de la nave.
 
-Debe permitir consultar posteriormente:
+En estado normal debe ocupar el mínimo espacio y limitarse a indicar si existen daños o incidencias relevantes.
+
+Al abrir la vista detallada de daños puede consultar:
 
 - compartimentos;
-- estado estructural;
 - Pressure/Air;
 - tripulación;
 - componentes;
-- averías;
 - reparaciones;
 - mamparos;
 - descompresión.
 
-Las funciones exactas de interacción con control de daños se diseñarán en detalle más adelante.
+La información detallada del estado interno no debe ocupar permanentemente el HUD táctico.
 
 ## 24.12. Control del tiempo
 
@@ -3701,6 +3726,11 @@ Los eventos definidos en el sistema de navegación pueden devolver automáticame
 200. Los grupos NAVIGATION, SENSORS, WEAPONS, DEFENSE, EW y SHIP permanecen siempre visibles como accesos del panel inferior.
 201. El mapa táctico sustituye completamente la vista central 3D mientras está desplegado y se repliega automáticamente al emitir una orden de movimiento.
 202. La filosofía general de interacción de armas y defensas es configurar o seleccionar el sistema en el panel inferior y después indicar dirección u objetivo mediante clic en la vista 3D.
+203. La interfaz táctica sigue un principio de mínima información: cada panel muestra solo controles y datos necesarios para una decisión inmediata.
+204. Navigation muestra únicamente Fuel, velocidad actual, selector FAST/ECONOMIC/ENGINE OFF y acceso al mapa táctico.
+205. Sensors muestra sensores disponibles con ON/OFF y, para sensores activos, la distancia de búsqueda y acción de barrido.
+206. Las estadísticas técnicas avanzadas de sensores, armas, defensas y EW no se muestran permanentemente salvo que sean necesarias para una decisión inmediata.
+207. Alertas, bloqueos, colas y estados excepcionales aparecen de forma contextual solo mientras sean relevantes.
 
 ---
 

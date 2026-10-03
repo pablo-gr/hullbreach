@@ -1,7 +1,7 @@
 # Hullbreach — Especificación de diseño del juego
 
 **Estado:** Documento vivo de diseño
-**Versión:** 1.19
+**Versión:** 1.20
 **Fuente canónica:** este fichero
 
 Este documento consolida las decisiones de diseño tomadas hasta ahora para Hullbreach. Distingue principios ya fijados de elementos todavía pendientes de concretar.
@@ -3305,197 +3305,277 @@ Puede incluir, según el nivel de información disponible:
 
 Nunca muestra datos reales ocultos.
 
-## 24.4. Panel inferior de control
+## 24.4. Consola de mando
 
-En la parte inferior existe un panel de control permanente.
+La franja inferior no funciona mediante pestañas de aplicación.
 
-Los principales grupos permanecen siempre visibles como botones:
+Es una **única consola física de mando** dividida en módulos funcionales, inspirada visualmente en un panel real de aeronave o nave:
 
-- **NAVIGATION**;
+- **NAV**;
 - **SENSORS**;
 - **WEAPONS**;
 - **DEFENSE**;
 - **EW**;
 - **SHIP**.
 
-El control del tiempo permanece en la barra superior.
+Todos los módulos están visibles simultáneamente.
+
+El jugador no pulsa NAV, SENSORS o WEAPONS para sustituir unos controles por otros. Esas etiquetas identifican zonas físicas permanentes del panel.
+
+### Lenguaje físico de controles
+
+Siempre que sea posible se utilizan controles que parezcan pertenecer a una consola real:
+
+- interruptores basculantes para ON/OFF;
+- selectores rotatorios para modos, alcance o modelo;
+- conmutadores de dos o tres posiciones para opciones mutuamente excluyentes;
+- pequeños displays empotrados para cantidades y valores;
+- pilotos luminosos para estados y advertencias;
+- pulsadores físicos para acciones puntuales.
+
+Deben evitarse botones de interfaz genéricos cuando un control físico equivalente sea más apropiado.
 
 ### Principio de mínima información
 
-Cada panel debe ocupar el menor espacio posible y mostrar únicamente la información necesaria para tomar decisiones inmediatas.
+Cada módulo muestra únicamente lo necesario para operar el sistema durante juego normal.
 
-La interfaz debe evitar:
+Debe evitarse:
 
-- indicadores redundantes;
-- estadísticas técnicas que no requieren atención continua;
-- números que no cambian la decisión actual;
-- controles que puedan resolverse automáticamente;
-- botones separados para acciones que puedan expresarse de forma más simple.
+- repetir información;
+- mostrar estadísticas de diseño del componente;
+- llenar el panel de cifras;
+- mostrar estados irrelevantes;
+- dedicar controles permanentes a automatismos.
 
-Los detalles avanzados pueden aparecer mediante información contextual, tooltips o pantallas específicas cuando sean realmente necesarios.
+La contextualidad se utiliza solo dentro de un módulo cuando varios sistemas comparten físicamente los mismos controles.
 
-Seleccionar un grupo despliega solo sus controles esenciales en el área contextual del panel inferior.
+Por ejemplo, WEAPONS reutiliza un mismo selector secundario como SALVO para misiles o ACTIVATION para torpedos.
 
-## 24.5. Navigation
+## 24.5. NAV
 
-El panel Navigation debe ser extremadamente compacto.
+NAV debe ser uno de los módulos más simples.
 
-Muestra únicamente:
+Controles permanentes:
 
-- **Fuel**;
-- **velocidad actual**;
-- selector de modo:
+- pequeño display **FUEL**;
+- pequeño display **VEL** con velocidad actual;
+- conmutador físico de tres posiciones:
   - **FAST**;
-  - **ECONOMIC**;
-  - **ENGINE OFF**;
-- botón para abrir el **TACTICAL MAP**.
+  - **ECO**;
+  - **OFF**;
+- pulsador físico **MAP**.
 
-No muestra de forma permanente:
+El selector OFF representa ENGINE OFF.
 
-- destino;
-- ETA;
-- cuerpo gravitatorio;
-- fases de aceleración;
-- trayectoria prevista;
-- detalles de planificación orbital.
+No muestra destino, ETA, cuerpo dominante ni planificación orbital en la consola.
 
-Esa información pertenece al mapa táctico cuando sea necesaria.
+El botón MAP abre el mapa táctico.
 
-### Modos
+### Mapa táctico
 
-**FAST** utiliza el modo de transferencia rápido ya definido.
+El mapa táctico sustituye completamente la vista 3D central.
 
-**ECONOMIC** utiliza el modo económico ya definido.
+Desde él se selecciona cualquier destino o punto de movimiento.
 
-**ENGINE OFF** ordena apagar el motor principal y mantener la trayectoria física resultante por inercia y gravedad.
+Al emitir una orden:
 
-### Mapa táctico desplegable
-
-El botón TACTICAL MAP abre el mapa y sustituye completamente la vista central 3D.
-
-El jugador selecciona allí el destino.
-
-Cuando se emite una orden de movimiento:
-
-- la nave calcula automáticamente la maniobra;
+- la maniobra se calcula automáticamente;
 - el mapa se repliega;
 - vuelve la vista 3D.
 
-La trayectoria prevista puede mostrarse u ocultarse desde el propio mapa táctico.
+La trayectoria prevista puede mostrarse u ocultarse dentro del mapa.
 
-## 24.6. Sensors
+## 24.6. SENSORS
 
-El panel Sensors permite operar los sensores instalados.
+SENSORS muestra todos los sensores instalados que el jugador puede operar.
 
-Debe permitir, según equipamiento:
+### Sensores
 
-- seleccionar uno de los sensores activos disponibles;
-- encenderlo o apagarlo;
-- seleccionar banda de distancia;
-- ejecutar un barrido;
-- consultar su estado;
-- consultar sensores defensivos;## 24.6. Sensors
+Cada sensor dispone de:
 
-El panel Sensors debe mostrar únicamente los sensores realmente disponibles en la nave y los controles necesarios para utilizarlos.
+- identificación corta;
+- interruptor físico **ON/OFF**;
+- piloto luminoso de estado.
 
-Para cada sensor:
+Ejemplos de identificación:
 
-- control **ON/OFF**;
-- identificación suficiente para distinguir qué sensor es.
+- **ACT-1**;
+- **ACT-2**;
+- **DEF**;
+- **PASS**.
 
-Para sensores activos:
+Solo un sensor activo puede ser el sensor activo operativo en cada momento, según las reglas ya definidas.
 
-- selector de distancia de búsqueda;
-- acción de barrido cuando proceda.
+### Alcance y barrido
 
-No deben mostrarse permanentemente estadísticas como:
+Existe un único selector rotatorio **RANGE** para el sensor activo operativo.
 
-- Sensitivity;
-- Precision;
-- Energy footprint;
-- perfiles angulares;
-- parámetros internos del sensor;
+Posiciones:
 
-salvo que alguna de ellas sea necesaria para una decisión inmediata o se consulte de forma contextual.
+- **S**;
+- **M**;
+- **L**;
+- **X**.
 
-Los sensores defensivos y pasivos también se controlan desde este mismo panel mediante ON/OFF cuando sean desactivables.
+Existe un pulsador físico **SCAN**.
 
-Las zonas ciegas, interferencias y alertas relevantes deben comunicarse visualmente solo cuando estén ocurriendo, no mediante indicadores permanentes.
+Los sensores pasivos y defensivos no utilizan RANGE ni SCAN.
 
-## 24.7. Weapons
+No se muestran permanentemente Sensitivity, Precision, Energy footprint ni perfiles angulares.
 
-El panel Weapons debe ser compacto y sirve únicamente para **configurar lo imprescindible del disparo**, mientras que el objetivo o dirección se indica después en la vista 3D.
+Ceguera, interferencia u otros problemas aparecen mediante pilotos/avisos únicamente mientras estén ocurriendo.
 
-Para un misil:
+## 24.7. WEAPONS
 
-1. seleccionar modelo;
-2. seleccionar tamaño de salva cuando proceda;
-3. activar/preparar el disparo;
-4. hacer clic en la vista 3D para indicar la dirección inicial.
+WEAPONS controla únicamente el armamento ofensivo:
 
-Para un torpedo:
+- misiles;
+- torpedos.
 
-1. seleccionar modelo;
-2. seleccionar banda de activación;
-3. activar/preparar el disparo;
-4. hacer clic en la vista 3D para indicar la dirección inicial.
+El apuntado no se realiza en este módulo. Después de preparar el arma, el jugador indica la dirección mediante clic en la vista 3D.
 
-Debe mostrar únicamente la munición disponible y los estados o bloqueos que sean relevantes en ese momento. Reload, arcos y otros detalles no necesitan indicadores permanentes si el sistema puede resolverlos automáticamente.
+### Controles permanentes
 
-El sistema selecciona automáticamente un lanzador válido o ejecuta la orientación necesaria para cumplir la orden.
+- selector físico **MISSILE / TORPEDO**;
+- selector de **MODEL**;
+- pequeño display **AMMO**;
+- pulsador protegido o claramente diferenciado **ARM**.
 
-## 24.8. Defense
+### Control contextual
 
-El panel Defense debe ser compacto y sirve para seleccionar la defensa activa y, únicamente cuando proceda, su modo de funcionamiento.
+Existe un único selector secundario cuya función depende del tipo seleccionado.
 
-Debe mostrar solo lo necesario para actuar, por ejemplo:
+Con **MISSILE**:
 
-- tipo de defensa seleccionable;
-- munición cuando exista;
-- modo cinético **LOW / HIGH**;
-- indisponibilidad cuando exista.
+- función **SALVO**;
+- posiciones disponibles normalmente 1–4 según lanzador/modelo.
 
-Las colas de objetivos y estados detallados solo aparecen cuando existen o son relevantes.
+Con **TORPEDO**:
 
-Después de seleccionar una defensa, el jugador hace clic sobre la amenaza en la vista 3D.
+- función **ACTIVATION**;
+- posiciones:
+  - S;
+  - M;
+  - L;
+  - X.
 
-La selección sucesiva de varios blancos puede crear una cola cuando el sistema lo permita.
+El panel no muestra SALVO y ACTIVATION simultáneamente.
 
-Debe evitarse abrir menús complejos durante ventanas de reacción cortas.
+Al pulsar ARM, el sistema queda preparado para que el siguiente clic válido en la vista 3D indique la dirección inicial de lanzamiento.
 
-## 24.9. Señuelos
+Reload, arco y selección concreta de lanzador se gestionan automáticamente y solo producen una indicación si impiden ejecutar la orden.
 
-Los señuelos pueden integrarse en Weapons o Defense según la solución final de UX.
+## 24.8. DEFENSE
 
-Su interacción mantiene la misma filosofía general:
+DEFENSE permite seleccionar el sistema defensivo con el que el jugador quiere actuar sobre una amenaza.
 
-1. seleccionar/configurar el señuelo en el panel;
-2. seleccionar banda de activación;
-3. hacer clic en la vista 3D para indicar dirección;
-4. lanzar.
+### Selector principal
 
-No necesitan selección posterior de objetivo.
+Selector físico de tres posiciones:
 
-## 24.10. EW
+- **INT** — interceptor;
+- **LAS** — láser;
+- **KIN** — defensa cinética.
 
-El panel EW contiene sistemas de guerra electrónica como el Jammer.
+Después de seleccionar el sistema, el jugador hace clic sobre una amenaza en la vista 3D.
 
-Por defecto debe mostrar únicamente:
+### Zona contextual
 
-- sistema disponible;
-- estado **ON/OFF**;
-- Activation delay cuando esté activándose;
-- alertas relevantes sobre interferencia propia.
+El resto del pequeño módulo cambia según la defensa seleccionada.
 
-Interference, Area of effect, Huella energética y demás estadísticas no necesitan mostrarse permanentemente durante el combate; pueden consultarse de forma contextual cuando sea necesario.
+**INT**:
 
-## 24.11. Ship
+- display de interceptores restantes;
+- piloto de disponibilidad.
 
-El panel Ship da acceso al estado interno de la nave.
+**LAS**:
 
-En estado normal debe ocupar el mínimo espacio y limitarse a indicar si existen daños o incidencias relevantes.
+- estado básico del emisor:
+  - READY;
+  - ACTIVE;
+  - WARMUP/BLOCKED cuando proceda.
 
-Al abrir la vista detallada de daños puede consultar:
+No necesita contador de munición.
+
+**KIN**:
+
+- display de munición;
+- conmutador físico:
+  - LOW;
+  - HIGH;
+- piloto de disponibilidad.
+
+Los controles específicos de KIN no necesitan permanecer funcionalmente activos cuando está seleccionado INT o LAS.
+
+Las colas de objetivos se muestran únicamente cuando existen y preferiblemente fuera del espacio físico permanente del panel.
+
+## 24.9. EW
+
+EW contiene:
+
+- Jammer;
+- señuelos.
+
+Los señuelos pertenecen definitivamente a EW, no a WEAPONS ni DEFENSE.
+
+### Jammer
+
+Controles:
+
+- interruptor físico protegido **JAMMER ON/OFF**;
+- piloto de estado.
+
+Estados relevantes pueden incluir:
+
+- OFF;
+- STARTING;
+- ACTIVE.
+
+No se muestran permanentemente Interference, Area of effect ni Energy footprint.
+
+Si el Jammer está degradando los sensores propios, aparece una advertencia contextual.
+
+### Señuelos
+
+Controles:
+
+- selector **ACTIVATION** con:
+  - S;
+  - M;
+  - L;
+  - X;
+- pequeño display de cantidad restante;
+- pulsador **ARM/DECOY** o mecanismo equivalente para preparar el lanzamiento.
+
+Después de prepararlo, el jugador hace clic en la vista 3D para señalar la dirección de lanzamiento.
+
+No necesita selección de objetivo.
+
+## 24.10. SHIP
+
+SHIP ocupa poco espacio.
+
+Su función durante el combate normal es únicamente avisar de que existe un problema y proporcionar acceso a la vista detallada.
+
+Controles permanentes:
+
+- indicadores discretos:
+  - **OK**;
+  - **DMG**;
+  - **CRIT**;
+- pulsador **STATUS**.
+
+No existen:
+
+- barra de HP;
+- porcentaje de casco;
+- porcentaje de sistemas;
+- escudos;
+- indicador equivalente de salud global.
+
+STATUS abre la vista detallada de estado interno de la nave.
+
+Esa vista puede mostrar:
 
 - compartimentos;
 - Pressure/Air;
@@ -3505,7 +3585,24 @@ Al abrir la vista detallada de daños puede consultar:
 - mamparos;
 - descompresión.
 
-La información detallada del estado interno no debe ocupar permanentemente el HUD táctico.
+## 24.11. Distribución física inicial
+
+Como referencia de diseño, el ancho de la consola puede repartirse aproximadamente así:
+
+- NAV: 16 %;
+- SENSORS: 18 %;
+- WEAPONS: 22 %;
+- DEFENSE: 18 %;
+- EW: 16 %;
+- SHIP: 10 %.
+
+Estos porcentajes no son una regla de implementación y deberán ajustarse con prototipos reales.
+
+WEAPONS necesita algo más de espacio por sus controles contextuales.
+
+SHIP puede ser el módulo más pequeño.
+
+La altura objetivo de la consola debe mantenerse contenida para no reducir excesivamente la vista 3D. El prototipo visual debe buscar aproximadamente un 20–25 % de la altura total de pantalla antes de decidir el valor definitivo.
 
 ## 24.12. Control del tiempo
 
@@ -3723,14 +3820,19 @@ Los eventos definidos en el sistema de navegación pueden devolver automáticame
 197. La barra superior muestra únicamente el nombre de la nave y el control del tiempo.
 198. Fuel, Power, firma, Huella energética, munición y estados técnicos se muestran dentro de sus paneles correspondientes, no en una barra global.
 199. La información del contacto seleccionado dispone de una zona lateral permanente y solo muestra información realmente conocida.
-200. Los grupos NAVIGATION, SENSORS, WEAPONS, DEFENSE, EW y SHIP permanecen siempre visibles como accesos del panel inferior.
+200. NAV, SENSORS, WEAPONS, DEFENSE, EW y SHIP son módulos físicos permanentes de una única consola; no funcionan como pestañas.
 201. El mapa táctico sustituye completamente la vista central 3D mientras está desplegado y se repliega automáticamente al emitir una orden de movimiento.
-202. La filosofía general de interacción de armas y defensas es configurar o seleccionar el sistema en el panel inferior y después indicar dirección u objetivo mediante clic en la vista 3D.
-203. La interfaz táctica sigue un principio de mínima información: cada panel muestra solo controles y datos necesarios para una decisión inmediata.
-204. Navigation muestra únicamente Fuel, velocidad actual, selector FAST/ECONOMIC/ENGINE OFF y acceso al mapa táctico.
-205. Sensors muestra sensores disponibles con ON/OFF y, para sensores activos, la distancia de búsqueda y acción de barrido.
-206. Las estadísticas técnicas avanzadas de sensores, armas, defensas y EW no se muestran permanentemente salvo que sean necesarias para una decisión inmediata.
-207. Alertas, bloqueos, colas y estados excepcionales aparecen de forma contextual solo mientras sean relevantes.
+202. La filosofía general de interacción de armas y defensas es configurar o seleccionar el sistema en la consola y después indicar dirección u objetivo mediante clic en la vista 3D.
+203. La interfaz táctica sigue un principio de mínima información: cada módulo muestra solo controles y datos necesarios para una decisión inmediata.
+204. NAV muestra únicamente Fuel, velocidad actual, selector FAST/ECO/OFF y acceso al mapa táctico.
+205. SENSORS muestra los sensores disponibles con ON/OFF, un único RANGE para el sensor activo operativo y SCAN.
+206. WEAPONS reutiliza controles contextuales: SALVO para misiles o ACTIVATION para torpedos, nunca ambos simultáneamente.
+207. DEFENSE reutiliza una zona contextual según INT/LAS/KIN y solo muestra munición o modo cuando son aplicables.
+208. Los señuelos pertenecen al módulo EW junto con el Jammer.
+209. SHIP no muestra salud global ni HP; solo estado OK/DMG/CRIT y acceso a STATUS.
+210. Las estadísticas técnicas avanzadas de sensores, armas, defensas y EW no se muestran permanentemente salvo que sean necesarias para una decisión inmediata.
+211. Alertas, bloqueos, colas y estados excepcionales aparecen de forma contextual solo mientras sean relevantes.
+212. La consola utiliza lenguaje visual de panel físico: interruptores, selectores rotatorios, conmutadores, displays empotrados, pilotos y pulsadores, evitando apariencia de aplicación con botones genéricos.
 
 ---
 
